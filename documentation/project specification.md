@@ -1,5 +1,5 @@
 ## Project specification
-This project will be documented in English
+This project will be documented in English and programmed in Java
 
 I am studying for a bachelor's in computer science
 

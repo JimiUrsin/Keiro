@@ -7,7 +7,7 @@ Hours spent total: 2
 Created the project and its specification
 
 ### How has the project progressed?
-This weeks requirements were fulfilled on time.
+This week's requirements were fulfilled on time.
 
 ### What did you learn this week?
 How to set up Maven through Netbeans.
