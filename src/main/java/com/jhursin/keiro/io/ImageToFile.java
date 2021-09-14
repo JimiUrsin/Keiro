@@ -1,4 +1,4 @@
-package com.jhursin.keiro.render;
+package com.jhursin.keiro.io;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
