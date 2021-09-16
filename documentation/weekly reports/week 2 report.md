@@ -1,7 +1,7 @@
 # Week 2
 
-Hours spent this week: 2  
-Hours spent total: 4
+Hours spent this week: 6  
+Hours spent total: 10
 
 ### What have you done this week?
 
