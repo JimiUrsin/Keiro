@@ -1,5 +1,7 @@
 package com.jhursin.keiro.io;
 
+import com.jhursin.keiro.logic.Grid;
+import com.jhursin.keiro.logic.Node;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -17,7 +19,7 @@ public class ImageToFile {
      * @param bimg Image to be drawn to file
      * @param filename File to be written to
      */
-    public void drawToFile(BufferedImage bimg, String filename){
+    public static void drawToFile(BufferedImage bimg, String filename){
         try {
             ImageIO.write(bimg, "PNG", new File(filename));
         } catch (IOException ioe) {
@@ -29,11 +31,21 @@ public class ImageToFile {
         }
     }
     
+    public static void drawGridToFile(Grid grid, String filename) {
+        BufferedImage bimg = new BufferedImage(grid.nodes[0].length, grid.nodes.length, BufferedImage.TYPE_INT_RGB);
+        for(int y = 0; y < bimg.getHeight(); y++) {
+            for(int x = 0; x < bimg.getWidth(); x++) {
+                bimg.setRGB(x, y, grid.nodes[y][x].getRGB());
+            }
+        }
+        drawToFile(bimg, filename);
+    }
+    
     /**
      * Draws a dummy image to file
      * @param filename Name of the dummy image file
      */
-    public void drawDummyToFile(String filename) {
+    public static void drawDummyToFile(String filename) {
         BufferedImage bimg = makeDummyImage();
         drawToFile(bimg, filename);
     }
@@ -43,7 +55,7 @@ public class ImageToFile {
      * used mainly for testing purposes.
      * @return Dummy BufferedImage with aforementioned pattern
      */
-    private BufferedImage makeDummyImage() {
+    private static BufferedImage makeDummyImage() {
         BufferedImage dummy = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
         boolean white = true;
         for(int y = 0; y < 100; y++) {
