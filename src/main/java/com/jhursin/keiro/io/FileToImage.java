@@ -23,6 +23,7 @@ public class FileToImage {
         try {
             bimg = ImageIO.read(new File(filename));
         } catch (IOException ioe) {
+            // TODO Better error handling
             ioe.printStackTrace();
         }
         

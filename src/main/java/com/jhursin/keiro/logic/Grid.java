@@ -14,11 +14,13 @@ public class Grid {
     }
     
     public void setStart(int x, int y) {
+        nodes[y][x] = Node.START;
         this.startX = x;
         this.startY = y;
     }
     
     public void setEnd(int x, int y) {
+        nodes[y][x] = Node.END;
         this.endX = x;
         this.endY = y;
     }
@@ -28,7 +30,7 @@ public class Grid {
     }
     
     public int getStartY() {
-        return startX;
+        return startY;
     }
     
     public int getEndX() {

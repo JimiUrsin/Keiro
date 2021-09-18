@@ -24,7 +24,7 @@ public class ImageToFile {
             ImageIO.write(bimg, "PNG", new File(filename));
         } catch (IOException ioe) {
             if (ioe.getCause() == null) {
-                System.err.println("Unknown error occurred during file rendering");
+                System.err.println("Unknown error occurred while writing to file");
             } else {
                 System.err.println(ioe.getCause());
             }
@@ -41,34 +41,5 @@ public class ImageToFile {
         drawToFile(bimg, filename);
     }
     
-    /**
-     * Draws a dummy image to file
-     * @param filename Name of the dummy image file
-     */
-    public static void drawDummyToFile(String filename) {
-        BufferedImage bimg = makeDummyImage();
-        drawToFile(bimg, filename);
-    }
-    
-    /**
-     * Makes a 100x100 dummy BufferedImage with an alternating black-and-white pattern
-     * used mainly for testing purposes.
-     * @return Dummy BufferedImage with aforementioned pattern
-     */
-    private static BufferedImage makeDummyImage() {
-        BufferedImage dummy = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
-        boolean white = true;
-        for(int y = 0; y < 100; y++) {
-            white = !white;
-            for(int x = 0; x < 100; x++) {
-                if (white) {
-                    dummy.setRGB(x, y, 0xFFFFFF);
-                } else {
-                    dummy.setRGB(x, y, 0x000000);
-                }
-                white = !white;
-            }
-        }
-        return dummy;
-    }
+
 }
