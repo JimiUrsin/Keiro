@@ -9,21 +9,22 @@ public enum Node {
     EMPTY   (0xFFFFFFFF),
     BLOCKED (0xFF000000),
     UNKNOWN (0xBADC0DE);
-    
+
     private final int rgb;
-    
-    Node(final int rgb) {
-        this.rgb = rgb;
+
+    Node(final int newrgb) {
+        this.rgb = newrgb;
     }
-    
+
     public int getRGB() {
         return this.rgb;
     }
-    
+
     public static Node match(int rgb) {
         for (Node n: values()) {
-            if (rgb == n.getRGB()) 
+            if (rgb == n.getRGB()) {
                 return n;
+            }
         }
         return UNKNOWN;
     }
