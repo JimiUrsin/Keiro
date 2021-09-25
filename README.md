@@ -10,5 +10,6 @@ A program for comparing pathfinding algorithms with visualizations.
 The latest coverage report can be viewed [here](https://htmlpreview.github.io/?https://github.com/JimiUrsin/Keiro/blob/main/documentation/coverage%20reports/25th%20Sep%202021/index.html)
 
 #### Others
-[Project specification](https://github.com/JimiUrsin/Keiro/blob/main/documentation/project%20specification.md)
+[Project specification](https://github.com/JimiUrsin/Keiro/blob/main/documentation/project%20specification.md) 
+
 [Testing document](https://github.com/JimiUrsin/Keiro/blob/main/documentation/testing%20document.md)
