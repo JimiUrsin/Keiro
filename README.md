@@ -11,3 +11,4 @@ The latest coverage report can be viewed [here](https://htmlpreview.github.io/?h
 
 #### Others
 [Project specification](https://github.com/JimiUrsin/Keiro/blob/main/documentation/project%20specification.md)
+[Testing document](https://github.com/JimiUrsin/Keiro/blob/main/documentation/testing%20document.md)
