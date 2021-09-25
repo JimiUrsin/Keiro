@@ -4,7 +4,9 @@ A program for comparing pathfinding algorithms with visualizations.
 #### Weekly reports
 [Week 1](https://github.com/JimiUrsin/Keiro/blob/main/documentation/weekly%20reports/week%201%20report.md) 
 
-[Week 2](https://github.com/JimiUrsin/Keiro/blob/main/documentation/weekly%20reports/week%202%20report.md)
+[Week 2](https://github.com/JimiUrsin/Keiro/blob/main/documentation/weekly%20reports/week%202%20report.md) 
+
+[Week 3](https://github.com/JimiUrsin/Keiro/blob/main/documentation/weekly%20reports/week%203%20report.md)
 
 #### Coverage reports
 The latest coverage report can be viewed [here](https://htmlpreview.github.io/?https://github.com/JimiUrsin/Keiro/blob/main/documentation/coverage%20reports/25th%20Sep%202021/index.html)
