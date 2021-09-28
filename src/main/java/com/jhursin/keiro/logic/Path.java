@@ -5,6 +5,7 @@ import com.jhursin.keiro.io.FileToImage;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.PriorityQueue;
+import java.util.Stack;
 
 /**
  * Contains pathfinding algorithms.
@@ -56,6 +57,12 @@ public class Path {
      * @return Length of the best path
      */
     public static int solveAStar(final Grid grid, MapWindow mw) {
+        boolean draw = true;
+        
+        if (mw == null) {
+            draw = false;
+        }
+        
         if (deltas == null) {
             createDeltas();
         }
@@ -67,7 +74,9 @@ public class Path {
         Point start = new Point(grid.getStartX(), grid.getStartY());
         start.setPrio(distance(start, grid.getEndX(), grid.getEndY()));
         open.add(start);
-        mw.setRGB(start.x, start.y, Node.QUEUE.getRGB());
+        if (draw) {
+            mw.setRGB(start.x, start.y, Node.QUEUE.getRGB());
+        }
 
         // Key = A point. 
         // Value = "Parent" point where we will come from on the best route
@@ -83,9 +92,11 @@ public class Path {
 
         // Stores how many points we have been to
         int operations = 0;
-        
+
         long time = System.nanoTime();
-        long delay = 100000;
+
+        // How long to wait between each operation in nanoseconds
+        long delay = 1000000;
         while (!open.isEmpty()) {
             while (System.nanoTime() - time < delay);
             time = System.nanoTime();
@@ -100,7 +111,9 @@ public class Path {
             }
 
             open.remove(curr);
-            mw.setRGB(curr.x, curr.y, Node.DROPPED.getRGB());
+            if (draw) {
+                mw.setRGB(curr.x, curr.y, Node.DROPPED.getRGB());
+            }
 
             // Go through all neighbors
             for (Point d : deltas) {
@@ -125,7 +138,9 @@ public class Path {
                     if (!open.contains(next)) {
                         next.setPrio(fScore.get(next));
                         open.add(next);
-                        mw.setRGB(next.x, next.y, Node.QUEUE.getRGB());
+                        if (draw) {
+                            mw.setRGB(next.x, next.y, Node.QUEUE.getRGB());
+                        }
                     }
                 }
             }
@@ -139,12 +154,13 @@ public class Path {
 
             // Start from the end            
             Point curr = new Point(grid.getEndX(), grid.getEndY());
-
+            
+            Stack<Point> path = new Stack<>();
             // Make our way back to the start
             while (curr != start) {
                 // System.out.println(String.format("Adding (%d, %d) to path", curr.x, curr.y));
                 grid.nodes[curr.y][curr.x] = Node.PATH;
-
+                path.add(curr);
                 /*
                 // Fill neighbours too so the line is a bit thicker
                 // TODO Make this a variable size
@@ -157,6 +173,21 @@ public class Path {
 
                 curr = cameFrom.get(curr);
                 length++;
+            }
+            
+            while(!path.empty()) {
+                curr = path.pop();
+                mw.setRGB(curr.x, curr.y, Node.PATH.getRGB());
+                /*
+                for(Point d : deltas) {
+                    mw.setRGB(curr.x + d.x, curr.y + d.y, Node.PATH.getRGB());
+                }
+                */
+                try {
+                    Thread.sleep(10);
+                } catch (Exception e) {
+                    
+                }
             }
         }
         System.out.println("Operations = " + operations);
