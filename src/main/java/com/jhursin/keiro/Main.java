@@ -8,10 +8,10 @@ import java.awt.image.BufferedImage;
 
 public class Main {
     public static void main(String[] args) {
-        BufferedImage bimg = FileToImage.readFile("test.png");
-        Grid grid = FileToImage.readFileToGrid("test.png");
+        BufferedImage bimg = FileToImage.readFile("test4.png");
+        Grid grid = FileToImage.readFileToGrid("test4.png");
         
-        MapWindow mw = new MapWindow(bimg, 10);
+        MapWindow mw = new MapWindow(bimg, 2);
         mw.show();
         try {
         Thread.sleep(300);
