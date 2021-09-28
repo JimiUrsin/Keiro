@@ -16,7 +16,7 @@ public final class MainWindow {
     private MainWindow() { }
 
 
-    private static JFrame frame = new JFrame("Keiro");
+    private static final JFrame frame = new JFrame("Keiro");
     
     /**
      * Create the main GUI window.

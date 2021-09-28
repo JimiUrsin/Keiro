@@ -8,7 +8,7 @@ import javax.swing.JLabel;
 public class MapWindow {
     JFrame frame;
     BufferedImage bimg;
-        
+
     private void constructMapWindow(BufferedImage bi) {
         this.frame = new JFrame("Keiro");
         this.bimg = bi;
@@ -22,7 +22,7 @@ public class MapWindow {
         
         this.frame.pack();
     }
-    
+
     public MapWindow(BufferedImage bimg) {
         constructMapWindow(bimg);
     }
@@ -34,11 +34,12 @@ public class MapWindow {
     public void hide() {
         this.frame.setVisible(false);
     }
-    
+
     public void setRGB(int x, int y, int color) {
         bimg.setRGB(x, y, color);
         frame.repaint();
     }
+
     /*
     public void testRepaint() {
         long time = System.currentTimeMillis();
@@ -61,5 +62,5 @@ public class MapWindow {
                 MainWindow.show();
             }
         });
-*/
+    */
 }

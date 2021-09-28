@@ -1,5 +1,6 @@
 package com.jhursin.keiro.logic;
 
+import com.jhursin.keiro.gui.MapWindow;
 import com.jhursin.keiro.io.FileToImage;
 import java.util.HashMap;
 import java.util.Objects;
@@ -48,11 +49,13 @@ public class Path {
     }
 
     /**
-     * Solves a grid with the A* algorithm, then draws its path on the grid itself.
+     * Solves a grid with the A* algorithm, then draws its path on the grid
+     * and onto the given MapWindow
      * @param grid Grid to be solved
+     * @param mw MapWindow for drawing
      * @return Length of the best path
      */
-    public static int solveAStar(final Grid grid) {
+    public static int solveAStar(final Grid grid, MapWindow mw) {
         if (deltas == null) {
             createDeltas();
         }
@@ -64,6 +67,7 @@ public class Path {
         Point start = new Point(grid.getStartX(), grid.getStartY());
         start.setPrio(distance(start, grid.getEndX(), grid.getEndY()));
         open.add(start);
+        mw.setRGB(start.x, start.y, Node.QUEUE.getRGB());
 
         // Key = A point. 
         // Value = "Parent" point where we will come from on the best route
@@ -79,8 +83,12 @@ public class Path {
 
         // Stores how many points we have been to
         int operations = 0;
-
+        
+        long time = System.nanoTime();
+        long delay = 100000;
         while (!open.isEmpty()) {
+            while (System.nanoTime() - time < delay);
+            time = System.nanoTime();
 
             // Get the Point with the highest priority
             Point curr = open.poll();
@@ -92,6 +100,7 @@ public class Path {
             }
 
             open.remove(curr);
+            mw.setRGB(curr.x, curr.y, Node.DROPPED.getRGB());
 
             // Go through all neighbors
             for (Point d : deltas) {
@@ -116,6 +125,7 @@ public class Path {
                     if (!open.contains(next)) {
                         next.setPrio(fScore.get(next));
                         open.add(next);
+                        mw.setRGB(next.x, next.y, Node.QUEUE.getRGB());
                     }
                 }
             }
