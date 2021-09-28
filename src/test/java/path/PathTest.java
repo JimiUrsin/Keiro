@@ -39,14 +39,14 @@ public class PathTest {
     @Test
     public void testAStar() {
         Path.setDiagonal(false);
-        int length = Path.solveAStar(g, null);
+        int length = Path.solveAStar(g, null, 0);
         assertEquals("Path was not shortest possible", length, 19);
     }
     
     @Test
     public void testAStarDiagonal() {
         Path.setDiagonal(true);
-        int length = Path.solveAStar(g, null);
+        int length = Path.solveAStar(g, null, 0);
         assertEquals("Path was not shortest possible", length, 10);
     }
     
@@ -59,7 +59,7 @@ public class PathTest {
         for(int x = 1; x < 9; x++) {
             g.nodes[1][x] = Node.BLOCKED;
         }
-        int length = Path.solveAStar(g, null);
+        int length = Path.solveAStar(g, null, 0);
         
         assertEquals("Path was not shortest possible", length, 18);        
     }

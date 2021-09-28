@@ -8,10 +8,10 @@ import java.awt.image.BufferedImage;
 
 public class Main {
     public static void main(String[] args) {
-        BufferedImage bimg = FileToImage.readFile("test4.png");
-        Grid grid = FileToImage.readFileToGrid("test4.png");
+        BufferedImage bimg = FileToImage.readFile("test5.png");
+        Grid grid = FileToImage.readFileToGrid("test5.png");
         
-        MapWindow mw = new MapWindow(bimg, 2);
+        MapWindow mw = new MapWindow(bimg);
         mw.show();
         try {
         Thread.sleep(300);
@@ -19,7 +19,6 @@ public class Main {
             
         }
         Path.setDiagonal(true);
-        Path.solveAStar(grid, mw);
-        
+        Path.solveAStar(grid, mw, 100_000);        
     }
 }

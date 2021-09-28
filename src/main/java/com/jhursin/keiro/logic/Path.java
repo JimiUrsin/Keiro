@@ -54,9 +54,10 @@ public class Path {
      * and onto the given MapWindow
      * @param grid Grid to be solved
      * @param mw MapWindow for drawing
+     * @param delay How long to wait between each operation in nanoseconds
      * @return Length of the best path
      */
-    public static int solveAStar(final Grid grid, MapWindow mw) {
+    public static int solveAStar(final Grid grid, MapWindow mw, long delay) {
         boolean draw = true;
         
         if (mw == null) {
@@ -95,8 +96,6 @@ public class Path {
 
         long time = System.nanoTime();
 
-        // How long to wait between each operation in nanoseconds
-        long delay = 1000000;
         while (!open.isEmpty()) {
             while (System.nanoTime() - time < delay);
             time = System.nanoTime();
@@ -175,18 +174,26 @@ public class Path {
                 length++;
             }
             
-            while(!path.empty()) {
-                curr = path.pop();
-                mw.setRGB(curr.x, curr.y, Node.PATH.getRGB());
-                /*
-                for(Point d : deltas) {
-                    mw.setRGB(curr.x + d.x, curr.y + d.y, Node.PATH.getRGB());
-                }
-                */
-                try {
-                    Thread.sleep(10);
-                } catch (Exception e) {
-                    
+            if (draw) {
+                // Set delay based on path length such that path drawing always takes 3 seconds
+                long pathDelay = 3000 / path.size();
+
+                while(!path.empty()) {
+                    curr = path.pop();
+                    mw.setRGB(curr.x, curr.y, Node.PATH.getRGB());
+
+                    // If dimensions exceed 400, we probably need to fill all
+                    // surrounding pixels as well for visibility
+                    if (grid.nodes.length > 400 && grid.nodes[0].length > 400) {
+                        for(Point d : deltas) {                        
+                            mw.setRGB(curr.x + d.x, curr.y + d.y, Node.PATH.getRGB());
+                        }
+                    }
+                    try {
+                        Thread.sleep(pathDelay);
+                    } catch (Exception e) {
+
+                    }
                 }
             }
         }
