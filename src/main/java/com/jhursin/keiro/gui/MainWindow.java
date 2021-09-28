@@ -1,6 +1,8 @@
 package com.jhursin.keiro.gui;
 
+import java.awt.image.BufferedImage;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -13,12 +15,14 @@ public final class MainWindow {
 
     private MainWindow() { }
 
+
+    private static JFrame frame = new JFrame("Keiro");
+    
     /**
      * Create the main GUI window.
      *
      */
     private static void constructGUI() {
-        JFrame frame = new JFrame("Keiro");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setResizable(false);
         frame.setVisible(true);
@@ -40,8 +44,14 @@ public final class MainWindow {
      *
      */
     public static void show() {
-        javax.swing.SwingUtilities.invokeLater(() -> {
-            constructGUI();
-        });
+        frame.setVisible(true);
+    }
+    
+    public static void create() {
+        constructGUI();
+    }
+    
+    public static void hide() {
+        frame.setVisible(false);
     }
 }

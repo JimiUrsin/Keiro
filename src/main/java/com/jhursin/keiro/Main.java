@@ -1,16 +1,17 @@
 package com.jhursin.keiro;
 
+import com.jhursin.keiro.gui.MainWindow;
+import com.jhursin.keiro.gui.MapWindow;
 import com.jhursin.keiro.io.FileToImage;
-import com.jhursin.keiro.io.ImageToFile;
-import com.jhursin.keiro.logic.Grid;
-import com.jhursin.keiro.logic.Path;
+import java.awt.image.BufferedImage;
 
 public class Main {
     public static void main(String[] args) {
-        String filename = "test5.png";
-        Grid grid = FileToImage.readFileToGrid(filename);
-        Path.solveAStar(grid);
-        ImageToFile.drawGridToFile(grid, "solved_" + filename);
+        MainWindow.create();
+        MainWindow.hide();
+        BufferedImage bimg = FileToImage.readFile("test4.png");
+        MapWindow mw = new MapWindow(bimg);
+        mw.show();
         
     }
 }

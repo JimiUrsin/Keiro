@@ -5,7 +5,6 @@ import com.jhursin.keiro.logic.Node;
 import com.jhursin.keiro.logic.Path;
 import static org.junit.Assert.assertEquals;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class PathTest {
