@@ -63,4 +63,25 @@ public class PathTest {
         
         assertEquals("Path was not shortest possible", length, 18);        
     }
+    
+    @Test
+    public void testJPS() {
+        Path.setDiagonal(true);
+        int length = Path.solveJPS(g, null, 0);
+        assertEquals("Path was not shortest possible", 10, length);
+    }
+    
+    @Test
+    public void testJPSWithObstacles() {
+        Path.setDiagonal(true);
+        for(int y = 1; y < 9; y++) {
+            g.nodes[y][1] = Node.BLOCKED;
+        }
+        for(int x = 1; x < 9; x++) {
+            g.nodes[1][x] = Node.BLOCKED;
+        }
+        int length = Path.solveJPS(g, null, 0);
+        
+        assertEquals("Path was not shortest possible", length, 18);        
+    }
 }

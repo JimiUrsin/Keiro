@@ -8,8 +8,8 @@ import java.awt.image.BufferedImage;
 
 public class Main {
     public static void main(String[] args) {
-        BufferedImage bimg = FileToImage.readFile("test5.png");
-        Grid grid = FileToImage.readFileToGrid("test5.png");
+        BufferedImage bimg = FileToImage.readFile("test2.png");
+        Grid grid = FileToImage.readFileToGrid("test2.png");
         
         MapWindow mw = new MapWindow(bimg);
         mw.show();
@@ -19,6 +19,7 @@ public class Main {
             
         }
         Path.setDiagonal(true);
-        Path.solveAStar(grid, mw, 100_000);        
+        int length = Path.solveJPS(grid, mw, 0);
+        System.out.println("length = " + length);
     }
 }
