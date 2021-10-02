@@ -4,6 +4,7 @@ import com.jhursin.keiro.gui.MapWindow;
 import com.jhursin.keiro.io.FileToImage;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Set;
@@ -199,132 +200,242 @@ public class Path {
                 }
             }
         }
-        System.out.println("Operations = " + operations);
+        System.out.println("A* length = " + length);
 
         return length;
     }
     
     public static int solveJPS(Grid grid, MapWindow mw, long delay) {
-        ArrayList<JumpPoint> nodes = new ArrayList<>();
-        int startX = grid.getStartX();
-        int startY = grid.getStartY();
+        delay *= 1000;
         
+        // JumpPoints in this set will not be processed again
+        HashMap<JumpPoint, JumpPoint> closed = new HashMap<>();
+        
+        // Contains all JumpPoints that need to be opened
+        PriorityQueue<JumpPoint> nodes = new PriorityQueue<>();
+        
+        // Diagonal movement must be allowed for JPS
         diagonal = true;
         createDeltas();
         
-        JumpPoint start = new JumpPoint(startX, startY, 0);
-        
+        // Add JumpPoints into all 8 directions from the start
         for (Point d : deltas) {
-            nodes.add(new JumpPoint(startX, startY, d.x, d.y, 0));
+            JumpPoint jp = new JumpPoint(grid.getStartX(), grid.getStartY(), d.x, d.y, 0, 0);
+            nodes.add(jp);
+            closed.put(jp, jp);
         }
         
+        long time = System.nanoTime();
         while(!nodes.isEmpty()) {
-            System.out.println(nodes.size());
-            JumpPoint node = nodes.remove(nodes.size() - 1);
-            System.out.println("Checking node (" + node.x + ", " + node.y + "), direction (" + node.dx + ", " + node.dy + ")");
+            // If time elapsed since last operation is less than the delay, wait
+            while(System.nanoTime() - time < delay);
+            
+            // Get the best priority JumpPoint from our PriorityQueue
+            // The heuristic is the same as in A*, which is the
+            // Chebyshev distance to the goal
+            JumpPoint node = nodes.poll();
+            
             if (node.x == grid.getEndX() && node.y == grid.getEndY()) {
-                System.out.println("Goal was found");
-                int length = 0;
-                int currx = node.x;
-                int curry = node.y;
-                while(node.getParent() != null) {
-                    System.out.println("(" + node.x + ", " + node.y + ")");
-                    node = node.getParent();
-                    length += distance(new Point(currx, curry), node.x, node.y);
-                    currx = node.x;
-                    curry = node.y;
-                }
-                System.out.println("(" + node.x + ", " + node.y + ")");
-                
-                return length + 1;
+                break;
             }
+            
+            // TODO Make a better color for JumpPoints
+            if (mw != null) mw.setRGB(node.x, node.y, Node.DROPPED.getRGB());
+            
+            
+            // System.out.println("Checking node (" + node.x + ", " + node.y + "), direction (" + node.dx + ", " + node.dy + ")");
+            
+            
+            // Check which direction the latest node is going to based on
+            // the delta values dx and dy, and call appropriate method
             ArrayList<JumpPoint> found_nodes;
+            
             if (node.dx == 0) {
-                found_nodes = search_v(nodes, new Point(node.x, node.y), node.dy, 0, grid);
+                found_nodes = search_v(nodes, closed, new Point(node.x, node.y), node.dy, 0, grid, mw, delay);
             } else if (node.dy == 0) {
-                found_nodes = search_h(nodes, new Point(node.x, node.y), node.dx, 0, grid);
+                found_nodes = search_h(nodes, closed, new Point(node.x, node.y), node.dx, 0, grid, mw, delay);
             } else {
-                found_nodes = search_d(nodes, new Point(node.x, node.y), node.dx, node.dy, 0, grid);
+                found_nodes = search_d(nodes, closed, new Point(node.x, node.y), node.dx, node.dy, 0, grid, mw, delay);
             }
+            
+            // For all JumpPoints found during this JumpPoint's handling,
+            // set this JumpPoint as their parent
             for (JumpPoint jp : found_nodes) {
                 jp.setParent(node);
             }
+            time = System.nanoTime();
         }
         
-        return 0;
+        JumpPoint goal = closed.get(new JumpPoint(grid.getEndX(), grid.getEndY(), 0, 0, 0, Integer.MAX_VALUE));
+        if (goal == null) {
+            // Goal wasn't found
+            if (mw != null) mw.jpsHasRun = true;
+            return 0;
+        }
+        
+        System.out.println("xd");
+        int length = 0;
+        JumpPoint curr = goal;
+        while(true) {
+            JumpPoint next = curr.getParent();
+            if (next == null) break;
+            length += distance(curr.x, curr.y, next.x, next.y);
+            if (mw != null) mw.drawPath(curr.x, curr.y, next.x, next.y);
+            curr = next;
+        }
+        
+        System.out.println("JPS length = " + (goal.dst + 1));
+        System.out.println("JPS length 2 = " + (length + 1));
+        
+        // We found the goal
+        if (mw != null) mw.jpsHasRun = true;
+        return length + 1;
     }
     
-    private static ArrayList<JumpPoint> search_h(ArrayList<JumpPoint> nodes, Point p, int dx, int dst, Grid g) {
+    /**
+     * A horizontal search for JumpPoints.
+     * @param nodes Queue containing all open JumpPoints
+     * @param closed HashSet containing closed JumpPoints
+     * @param p The Point this search will start from
+     * @param dx Horizontal delta (the direction we'll step), either 1 or -1
+     * @param dst Currently unused
+     * @param g Grid we are currently solving
+     * @param mw MapWindow onto which our progress will be drawn
+     * @param delay The minimum time between each operation in nanoseconds
+     * @return All nodes that were found during this search
+     */
+    private static ArrayList<JumpPoint> search_h(PriorityQueue<JumpPoint> nodes, HashMap<JumpPoint, JumpPoint> closed, Point p, final int dx, int dst, Grid g, MapWindow mw, long delay) {
         int x0 = p.x;
         int y = p.y;
         
+        // All JumpPoints we found during this search
         ArrayList<JumpPoint> found_nodes = new ArrayList<>();
+        int newdst = dst;
         
+        //System.out.println(String.format("Starting search_h from (%d, %d) with direction %d", x0, y, dx));
         while (true) {
+            // Move one step to the given direction
             x0 += dx;
-            System.out.println("x0 = " + x0);
+            newdst++;
             
+            // If we encounter an obstacle or the end of the map, end this search
             if (!valid(x0, y, g)) {
+                //System.out.println("Search_h found an obstacle, ending search\n");
                 return found_nodes;
             }
             
+            if (mw != null) mw.setRGB(x0, y, Node.QUEUE.getRGB());
+            
+            // If we find the goal, end this search
             if (x0 == g.getEndX() && y == g.getEndY()) {
-                JumpPoint jp = new JumpPoint(x0, y, dst + 1);
-                nodes.add(jp);
+                JumpPoint jp = new JumpPoint(x0, y, Integer.MIN_VALUE / 2, newdst);
                 found_nodes.add(jp);
-                System.out.println("Adding to list 8");
+                nodes.add(jp);
+                closed.put(jp, jp);
+                // System.out.println("Search_h found the goal, ending search\n");
                 return found_nodes;
             }
             
+            // Take one more step to the given direction
             int x1 = x0 + dx;
             
+            // Did we find a forced neighbor or not
             boolean found = false;
             
+            int h = distance(x0, y, g.getEndX(), g.getEndY());
+            
+            // If there is an obstacle above us but no obstacle up and to the
+            // left or right depending on our direction,
+            // create a jump point from here to there
             if (!valid(x0, y + 1, g) && valid(x1, y + 1, g)) {
-                JumpPoint jp = new JumpPoint(x0, y, dx, 1, dst + 1);
-                nodes.add(jp);
-                found_nodes.add(jp);
-                System.out.println("Adding to list 6");
-                System.out.println(String.format("(%d, %d), direction (%d, %d)", x0, y, dx, 1));
-                found = true;
-            }
-            if (!valid(x0, y - 1, g) && valid(x0, y - 1, g)) {
-                JumpPoint jp = new JumpPoint(x0, y, dx, -1, dst + 1);
-                nodes.add(jp);
-                found_nodes.add(jp);
-                System.out.println("Adding to list 5");
-                System.out.println(String.format("(%d, %d), direction (%d, %d)", x0, y, dx, -1));
+                JumpPoint jp = new JumpPoint(x0, y, dx, 1, h, newdst);
+                JumpPoint find = closed.get(jp);
+                if (find == null ? true : jp.dst < find.dst) {
+                    closed.put(jp, jp);
+                    nodes.add(jp);
+                    found_nodes.add(jp);                    
+                }
+                
+                //System.out.println("Search_h found forced neighbour above " + String.format("(%d, %d), direction %d", x0, y, dx));
+                //System.out.println(String.format("(%d, %d), direction (%d, %d)", x0, y, dx, 1));
                 found = true;
             }
             
+            // Same as above, but this time we're checking below us
+            if (!valid(x0, y - 1, g) && valid(x1, y - 1, g)) {
+                JumpPoint jp = new JumpPoint(x0, y, dx, -1, h, newdst);
+                JumpPoint find = closed.get(jp);
+                if (find == null ? true : jp.dst < find.dst) {
+                    closed.put(jp, jp);
+                    nodes.add(jp);
+                    found_nodes.add(jp);
+                    
+                    // System.out.println("Search_h found forced neighbour below " + String.format("(%d, %d), direction %d \n", x0, y, dx));
+                }
+                
+            }
+            
+            // If we found a forced neighbor, add our 
+            // current route as a jump point and return
+            
+            
             if (found) {
-                JumpPoint jp = new JumpPoint(x0, y, dx, 0, dst + 1);
-                nodes.add(jp);
-                found_nodes.add(jp);
-                System.out.println("Adding to list 7");
+                
+                JumpPoint jp = new JumpPoint(x0, y, dx, 0, 1, newdst);
+                JumpPoint find = closed.get(jp);
+                if (find == null ? true : jp.dst < find.dst) {
+                    closed.put(jp, jp);
+                    nodes.add(jp);
+                    found_nodes.add(jp);
+                    //System.out.println(String.format("Search_h adds self back to list and returns on (%d, %d) with direction %d\n", x0, y, dx));
+                }
                 return found_nodes;
             }
+            
         }
     }
     
-    private static ArrayList<JumpPoint> search_v(ArrayList<JumpPoint> nodes, Point p, int dy, int dst, Grid g) {
+    /**
+     * @see #search_h(java.util.PriorityQueue, java.util.HashSet, com.jhursin.keiro.logic.Point, int, int, com.jhursin.keiro.logic.Grid, com.jhursin.keiro.gui.MapWindow, long) 
+     * @param nodes
+     * @param closed
+     * @param p
+     * @param dy
+     * @param dst
+     * @param g
+     * @param mw
+     * @param delay
+     * @return 
+     */
+    private static ArrayList<JumpPoint> search_v(PriorityQueue<JumpPoint> nodes, HashMap<JumpPoint, JumpPoint> closed, Point p, final int dy, int dst, Grid g, MapWindow mw, long delay) {
+        // This is literally the exact same method as search_h, except vertically
+        // please refer to its documentation
         int x = p.x;
         int y0 = p.y;
         
+        // System.out.println(String.format("Starting search_v from (%d, %d) with direction %d", x, y0, dy));
+        
         ArrayList<JumpPoint> found_nodes = new ArrayList<>();
         
+        int newdst = dst;
         while (true) {
-            System.out.println("search_v y0 = " + y0);
+            // System.out.println("search_v y0 = " + y0);
             y0 += dy;
+            newdst++;
             
             if (!valid(x, y0, g)) {
+                //System.out.println("Search_v found obstacle, returning\n");
                 return found_nodes;
             }
             
+            if (mw != null) mw.setRGB(x, y0, Node.QUEUE.getRGB());
+            
             if (x == g.getEndX() && y0 == g.getEndY()) {
-                JumpPoint jp = new JumpPoint(x, y0, dst + 1);
-                nodes.add(jp);
+                //System.out.println("Search_v found the goal, returning\n");
+                JumpPoint jp = new JumpPoint(x, y0, Integer.MIN_VALUE / 2, newdst);
                 found_nodes.add(jp);
+                nodes.add(jp);
+                closed.put(jp, jp);
                 return found_nodes;
             }
             
@@ -332,113 +443,222 @@ public class Path {
             
             boolean found = false;
             
+            int h = distance(x, y0, g.getEndX(), g.getEndY());
+            
             if (!valid(x + 1, y0, g) && valid(x + 1, y1, g)) {
-                JumpPoint jp = new JumpPoint(x, y0, +1, dy, dst + 1);
-                nodes.add(jp);
-                found_nodes.add(jp);
-                System.out.println("Adding to list 3");
-                found = true;
+                JumpPoint jp = new JumpPoint(x, y0, 1, dy, h, newdst);
+                JumpPoint find = closed.get(jp);
+                if (find == null ? true : jp.dst < find.dst) {
+                    closed.put(jp, jp);
+                    nodes.add(jp);
+                    found_nodes.add(jp);
+                    //System.out.println(String.format("Search_v found forced neighbour to the right at (%d, %d) direction %d", x, y0, dy));
+                    found = true;
+                    
+                }
             }
             if (!valid(x - 1, y0, g) && valid(x - 1, y1, g)) {
-                JumpPoint jp = new JumpPoint(x, y0, -1, dy, dst + 1);
-                nodes.add(jp);
-                found_nodes.add(jp);
-                System.out.println("Adding to list 4");
-                found = true;
+                JumpPoint jp = new JumpPoint(x, y0, -1, dy, h, newdst);
+                JumpPoint find = closed.get(jp);
+                if (find == null ? true : jp.dst < find.dst) {
+                    closed.put(jp, jp);
+                    nodes.add(jp);
+                    found_nodes.add(jp);
+                    // System.out.println(String.format("Search_v found forced neighbour to the left at (%d, %d) direction %d", x, y0, dy));
+                    found = true;
+                    
+                }
             }
             
+            
             if (found) {
-                JumpPoint jp = new JumpPoint(x, y0, 0, dy, dst + 1);
-                nodes.add(jp);
-                found_nodes.add(jp);
+                
+                //System.out.println(String.format("Search_v ends search because forced neighbour was found, adding (%d, %d) with direction %d back to queue\n", x, y0, dy));
+                JumpPoint jp = new JumpPoint(x, y0, 0, dy, 1, newdst);
+                JumpPoint find = closed.get(jp);
+                if (find == null ? true : jp.dst < find.dst) {
+                    closed.put(jp, jp);
+                    nodes.add(jp);
+                    found_nodes.add(jp);
+                }
                 return found_nodes;
+                
             }
+            
+            
         }
     }
     
-    private static ArrayList<JumpPoint> search_d(ArrayList<JumpPoint> nodes, Point p, int dx, int dy, int dst, Grid g) {
+    /**
+     * A diagonal search for JumpPoints.
+     * Spawns a horizontal and vertical search on every 
+     * @param nodes Queue containing all open JumpPoints
+     * @param closed HashSet containing closed JumpPoints
+     * @param p The Point this search will start from
+     * @param dx Horizontal delta (the direction we'll step), either 1 or -1
+     * @param dst Currently unused
+     * @param g Grid we are currently solving
+     * @param mw MapWindow onto which our progress will be drawn
+     * @param delay The minimum time between each operation in nanoseconds
+     * @return All nodes that were found during this search
+     */
+    private static ArrayList<JumpPoint> search_d(PriorityQueue<JumpPoint> nodes, HashMap<JumpPoint, JumpPoint> closed, Point p, int dx, int dy, int dst, Grid g, MapWindow mw, long delay) {
         int x0 = p.x;
         int y0 = p.y;
         
+        //System.out.println(String.format("Starting search_d from (%d, %d) with direction (%d, %d)", x0, y0, dx, dy));
+        
+        // All JumpPoints we found during this search
         ArrayList<JumpPoint> found_nodes = new ArrayList<>();
         
+        // This point is one step into our given direction
         int x1 = p.x;
         int y1 = p.y;
+        
+        int newdst = dst;
+        
+        long time = System.nanoTime();
+        
         while (true) {
+            // Take one step to the given direction
             x1 += dx;
             y1 += dy;
             
-            System.out.println("Search_d x1 = " + x1);
-            System.out.println("Search_d y1 = " + y1);
-            System.out.println();
+            newdst++;
             
+            
+            // If we're on an obstacle or out of the map, this search is done.
             if (!valid(x1, y1, g)) {
-                System.out.println("Invalid location, ending search\n");
+                //System.out.println("Search_d was blocked, ending search\n");
                 return found_nodes;
             }
             
+            // If we found the end, this search is done.
             if (x1 == g.getEndX() && y1 == g.getEndY()) {
-                JumpPoint jp = new JumpPoint(x1, y1, dst + 1);
+                JumpPoint jp = new JumpPoint(x1, y1, Integer.MIN_VALUE / 2, newdst);
                 found_nodes.add(jp);
                 nodes.add(jp);
+                closed.put(jp, jp);
+                return found_nodes;
             }
             
+            if (mw != null) mw.setRGB(x1, y1, Node.QUEUE.getRGB());
+            
+            // This point is two steps into our given direction
             int x2 = x1 + dx;
             int y2 = y1 + dy;
             
+            // Was a forced neighbor found or not
             boolean found = false;
             
+            // Minimum distance to goal, used as our PriorityQueue's priority
+            int h = distance(x0, y1, g.getEndX(), g.getEndY());
+            
+            // Check for a diagonal forced neighbor
+            // For example if our direction is up and to the right, this checks
+            // if there is a forced neighbor up and to the left of us or
+            // down and to the right
             if (!valid(x0, y1, g) && valid(x0, y2, g)) {
-                JumpPoint parent = new JumpPoint(x1, y1, dst);
-                JumpPoint jp = new JumpPoint(x1, y1, -dx, dy, dst + 1);
-                System.out.println("Adding to list 1");
-                found_nodes.add(parent);
-                jp.setParent(parent);
-                nodes.add(jp);
-                
-                found = true;
+                // Forced neighbor found, its direction will be the same vertically
+                // but reversed horizontally
+                JumpPoint jp = new JumpPoint(x1, y1, -dx, dy, h, newdst);
+                JumpPoint find = closed.get(jp);
+                if (find == null ? true : jp.dst < find.dst) {
+                    closed.put(jp, jp);
+                    nodes.add(jp);
+                    found_nodes.add(jp);
+                    
+                    found = true;
+                    // System.out.println("Search_d found forced neighbor from (" + x1 + ", " + y1 + "), direction (" + dx + ", " + (-dy) + ")");
+                }
             }
+            
+            // See above but vice versa
             if (!valid(x1, y0, g) && valid(x2, y0, g)) {
-                JumpPoint jp = new JumpPoint(x1, y1, dx, -dy, dst + 1);
-                System.out.println("Adding to list 2, direction (" + dx + ", " + (-dy) + ")");
-                found_nodes.add(jp);
-                nodes.add(jp);
-                found = true;
+                JumpPoint jp = new JumpPoint(x1, y1, dx, -dy, h, newdst);
+                JumpPoint find = closed.get(jp);
+                if (find == null ? true : jp.dst < find.dst) {
+                    closed.put(jp, jp);
+                    nodes.add(jp);
+                    found_nodes.add(jp);
+                    
+                    found = true;
+                    //System.out.println("Search_d found forced neighbor from (" + x1 + ", " + y1 + "), direction (" + dx + ", " + (-dy) + ")");
+                }
             }
             
-            boolean h = false;
-            boolean v = false;
-            
-            System.out.println("Search_d calls search_h");
-            ArrayList<JumpPoint> h_found = search_h(nodes, new Point(x1, y1), dx, dst + 1, g);
-            JumpPoint h_jp = new JumpPoint(x1, y1, dx, 0, dst + 1);
-            if (!h_found.isEmpty()) {
-                h = true;
-                found_nodes.add(h_jp);    
-            }
-            for (JumpPoint j : h_found) {
-                j.setParent(h_jp);
-            }
-
-            System.out.println("Search_d calls search_v");
-            ArrayList<JumpPoint> v_found = search_v(nodes, new Point(x1, y1), dy, dst + 1, g);
-            JumpPoint v_jp = new JumpPoint(x1, y1, 0, dy, dst + 1);
-            if (!v_found.isEmpty()) {
-                v = true;
-                found_nodes.add(v_jp);
-            }
-            for (JumpPoint j : v_found) {
-                j.setParent(v_jp);
-            }
-            if (h || v) {
-                System.out.println("Found jump points in h or v, ending search");
-                JumpPoint jp = new JumpPoint(x1, y1, dx, dy, dst + 1);
-                found_nodes.add(jp);
-                nodes.add(jp);
+            if (found) {
                 return found_nodes;
             }
+            
+            // Did we find any forced neighbors on our horizontal and vertical
+            // search that we're about to do.
+            boolean hv_done = false;
+            
+            
+            // We'll also wait between these operations since otherwise it would
+            // just blast through all diagonal scans
+            while(System.nanoTime() - time < delay);
+            time = System.nanoTime();
+            
+            // Check to see if we've done this already, if yes, skip
+            JumpPoint h_jp = new JumpPoint(x1, y1, dx, 0, h, newdst);
+            
+            if (!closed.containsKey(h_jp)) {
+                
+                //System.out.println("Search_d calls search_h\n");
+                ArrayList<JumpPoint> h_found = search_h(nodes, closed, new Point(x1, y1), dx, newdst, g, mw, delay);
+                closed.put(h_jp, h_jp);
+                
+                // Make this the parent of all JumpPoints found during our search
+                if (!h_found.isEmpty()) {
+                    found_nodes.add(h_jp);
+                    for (JumpPoint j : h_found) {
+                        j.setParent(h_jp);
+                    }
+                    hv_done = true;
+                }
+            }
+            
+            // Same as above but vertically
+            while(System.nanoTime() - time < delay);
+            JumpPoint v_jp = new JumpPoint(x1, y1, 0, dy, h, newdst);
+            if (!closed.containsKey(v_jp)) {
+
+                //System.out.println("Search_d calls search_v\n");
+                ArrayList<JumpPoint> v_found = search_v(nodes, closed, new Point(x1, y1), dy, newdst, g, mw, delay);
+                closed.put(v_jp, v_jp);
+                if (!v_found.isEmpty()) {
+                    found_nodes.add(v_jp);
+                    for (JumpPoint j : v_found) {
+                        j.setParent(v_jp);
+                    }
+                    hv_done = true;
+                }
+            }
+            
+            // If our horizontal or vertical search found nodes, stop this search
+            // for now and add this back to the queue to be opened later
+            if (hv_done) {
+                //System.out.println("Search_d ends");
+                
+                JumpPoint jp = new JumpPoint(x1, y1, dx, dy, 1, newdst);
+                
+                JumpPoint find = closed.get(jp);
+                if (find == null ? true : jp.dst < find.dst) {
+                    closed.put(jp, jp);
+                    nodes.add(jp);
+                    found_nodes.add(jp);
+                    return found_nodes;
+                }
+            }
+            // Move forward one step and repeat
+            x0 = x1;
+            y0 = y1;
         }
     }
+    
+    
 
     /**
      * Returns the distance between a point and an (x, y) coordinate.
@@ -458,6 +678,21 @@ public class Path {
         } else {
             return dx + dy;
         }
+    }
+    
+    /**
+     * Return the Chebyshev distance between two points
+     * @param x X coordinate of point to be checked
+     * @param y Y coordinate of point to be checked
+     * @param endX X coordinate of point to be checked against
+     * @param endY Y coordinate of point to be checked against
+     * @return 
+     */
+    static int distance(final int x, final int y, final int endX, final int endY) {        
+        int dx = Math.abs(endX - x);
+        int dy = Math.abs(endY - y);
+        
+        return Math.max(dx, dy);
     }
 
     /**
@@ -486,47 +721,33 @@ public class Path {
                && (g.nodes[y][x] != Node.BLOCKED);
     }
 }
+
     
-class JumpPoint {
+class JumpPoint implements Comparable<JumpPoint>{
     final int x;
     final int y;
     final int dx;
     final int dy;
-    private final int cost;
+    final int dst;
+    private final int h;
     private JumpPoint parent;
     
-    JumpPoint(int x, int y, int newcost) {
+    JumpPoint(int x, int y, int h, int dst) {
         this.x = x;
         this.y = y;
-        this.cost = newcost;
+        this.h = h;
+        this.dst = dst;
         this.dx = 0;
         this.dy = 0;
     }
     
-    JumpPoint(int x, int y, int dx, int dy, int cost) {        
+    JumpPoint(int x, int y, int dx, int dy, int h, int dst) {
         this.x = x;
         this.y = y;
         this.dx = dx;
         this.dy = dy;
-        this.cost = cost;
-    }
-    
-    JumpPoint(int x, int y, int dx, int dy, int cost, JumpPoint parent) {
-        this.x = x;
-        this.y = y;
-        this.dx = dx;
-        this.dy = dy;
-        this.cost = cost;
-        this.parent = parent;
-    }
-    
-    JumpPoint(int x, int y, int cost, JumpPoint parent) {
-        this.x = x;
-        this.y = y;
-        this.dx = 0;
-        this.dy = 0;
-        this.cost = cost;
-        this.parent = parent;
+        this.h = h;
+        this.dst = dst;
     }
     
     int getX() {
@@ -543,5 +764,42 @@ class JumpPoint {
     
     JumpPoint getParent() {
         return this.parent;
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y, dx, dy);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final JumpPoint other = (JumpPoint) obj;
+        if (this.x != other.x) {
+            return false;
+        }
+        if (this.y != other.y) {
+            return false;
+        }
+        if (this.dx != other.dx) {
+            return false;
+        }
+        if (this.dy != other.dy) {
+            return false;
+        }
+        return true;
+    }
+    
+    @Override
+    public int compareTo(JumpPoint other) {
+        return this.h - other.h;
     }
 }

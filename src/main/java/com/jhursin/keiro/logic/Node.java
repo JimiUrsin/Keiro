@@ -26,6 +26,23 @@ public enum Node {
                 return n;
             }
         }
+        // Interpret light grays as empty
+        if ((rgb & 0xFF0000) > 0xAA0000
+         && (rgb & 0x00FF00) > 0x00AA00
+         && (rgb & 0x0000FF) > 0x0000AA) {
+            return Node.EMPTY;
+        }
+        // Interpret dark grays as blocked
+        if ((rgb & 0xFF0000) < 0x550000
+         && (rgb & 0x00FF00) < 0x005500
+         && (rgb & 0x0000FF) < 0x000055) {
+            return Node.BLOCKED;
+        }
+        
+        // These are the "grass nodes" in the Moving AI benchmark set
+        if ((rgb & 0xFFFFFF) == 0x007F00) {
+            return Node.BLOCKED;
+        }
         return UNKNOWN;
     }
 }
