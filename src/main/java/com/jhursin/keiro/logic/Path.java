@@ -350,6 +350,15 @@ public class Path {
             if (!valid(x0, y + 1, g) && valid(x1, y + 1, g)) {
                 JumpPoint jp = new JumpPoint(x0, y, dx, 1, h, newdst);
                 JumpPoint find = closed.get(jp);
+                
+                // You will see the following four lines quite a lot, so read this
+                // If we find a potential JumpPoint, check to see if the same
+                // JumpPoint can be found in the closed list. If yes, we will
+                // replace it if our current distance travelled is less than
+                // the JumpPoint that was found earlier and add it back
+                // to the open queue. I am aware that this could be accomplished
+                // with just replacing all of the old nodes' children's parent
+                // with the better one but this is the best I've got right now
                 if (find == null ? true : jp.dst < find.dst) {
                     closed.put(jp, jp);
                     nodes.add(jp);
@@ -376,11 +385,9 @@ public class Path {
             }
             
             // If we found a forced neighbor, add our 
-            // current route as a jump point and return
+            // current route as a jump point and return           
             
-            
-            if (found) {
-                
+            if (found) {                
                 JumpPoint jp = new JumpPoint(x0, y, dx, 0, 1, newdst);
                 JumpPoint find = closed.get(jp);
                 if (find == null ? true : jp.dst < find.dst) {
@@ -587,6 +594,8 @@ public class Path {
                 }
             }
             
+            // This is probably not the correct thing to do
+            // TODO Figure out if it actually is
             if (found) {
                 return found_nodes;
             }
@@ -766,11 +775,14 @@ class JumpPoint implements Comparable<JumpPoint>{
         return this.parent;
     }
     
+    // The hash components of our algorithm wouldn't work if hashing and equals
+    // took into account anything other than the position and direction
     @Override
     public int hashCode() {
         return Objects.hash(x, y, dx, dy);
     }
-
+    
+    
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -800,6 +812,8 @@ class JumpPoint implements Comparable<JumpPoint>{
     
     @Override
     public int compareTo(JumpPoint other) {
+        // This will be used by PriorityQueue, so we want it to check just
+        // the heuristic value
         return this.h - other.h;
     }
 }
