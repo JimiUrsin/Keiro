@@ -39,7 +39,7 @@ public class Main {
         Runnable aStar = new Runnable() {
             @Override
             public void run() {                
-                Path.solveAStar(grid, mw, 3000L);
+                Path.solveAStar(grid, mw, 5000L);
             }
         };
         

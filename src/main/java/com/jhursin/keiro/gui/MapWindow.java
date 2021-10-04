@@ -285,11 +285,23 @@ public class MapWindow {
             dy = -1;
         }
         
+        boolean widen = Math.min(this.bimg.getWidth(), this.bimg.getHeight()) > 500;
+        
         while (x1 != x2 || y1 != y2) {
             setRGB(x1, y1, Node.PATH.getRGB());
             x1 += dx;
             y1 += dy;
-        } 
+            
+            if (widen) {
+                if (dx == 0) {
+                    setRGB(x1 + 1, y1, Node.PATH.getRGB());
+                    setRGB(x1 - 1, y1, Node.PATH.getRGB());
+                } else {                    
+                    setRGB(x1, y1 + 1, Node.PATH.getRGB());
+                    setRGB(x1, y1 - 1, Node.PATH.getRGB());
+                }
+            }
+        }
         setRGB(x1, y1, Node.PATH.getRGB());
     }
 }

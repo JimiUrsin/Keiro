@@ -18,6 +18,7 @@ public class Path {
     // Is diagonal movement allowed or not
     private static boolean diagonal;
     static Point[] deltas;
+    private static final double DIAG_COST = Math.sqrt(2D);
 
     // Points whose x and y components can be summed with a point to get
     // Points for all directions we can move to
@@ -49,7 +50,7 @@ public class Path {
      * @param delay How long to wait between each operation in nanoseconds
      * @return Length of the best path
      */
-    public static int solveAStar(final Grid grid, MapWindow mw, long delay) {
+    public static double solveAStar(final Grid grid, MapWindow mw, long delay) {
         boolean draw = true;
         
         if (mw == null) {
@@ -76,11 +77,11 @@ public class Path {
         HashMap<Point, Point> cameFrom = new HashMap<>();
 
         // G Score = cost of best currently known path to this node
-        HashMap<Point, Integer> gScore = new HashMap<>();
-        gScore.put(start, 0);
+        HashMap<Point, Double> gScore = new HashMap<>();
+        gScore.put(start, 0D);
 
         // F score = G score + estimated cost to goal
-        HashMap<Point, Integer> fScore = new HashMap<>();
+        HashMap<Point, Double> fScore = new HashMap<>();
         fScore.put(start, distance(start, grid.getEndX(), grid.getEndY()));
 
         // Stores how many points we have been to
@@ -107,7 +108,8 @@ public class Path {
             }
 
             // Go through all neighbors
-            for (Point d : deltas) {
+            for (int i = 0; i < deltas.length; i++) {
+                Point d = deltas[i];
                 Point next = new Point(curr.x + d.x, curr.y + d.y);
                 // If the neighbor is a blocked point or off the grid, just check the next one
                 if (!valid(next, grid)) {
@@ -115,10 +117,10 @@ public class Path {
                 }
 
                 // Cost to this neighbor will be the best known cost of previous + 1
-                int tempG = gScore.get(curr) + 1;
+                double tempG = gScore.get(curr) + (i >= 4 ? DIAG_COST : 1);
 
                 // If G score through current route is lower, we have found a better route
-                if (tempG < gScore.getOrDefault(next, Integer.MAX_VALUE)) {
+                if (tempG < gScore.getOrDefault(next, Double.MAX_VALUE)) {
                     // Change the route to the better one
                     cameFrom.put(next, curr);
 
@@ -136,15 +138,20 @@ public class Path {
                 }
             }
         }
-
-        int length = 1;
-        if (cameFrom.get(new Point(grid.getEndX(), grid.getEndY())) == null) {
+        
+        double length;
+        Point goal = new Point(grid.getEndX(), grid.getEndY());
+        if (cameFrom.get(goal) == null) {
             System.out.println("Goal was not found");
+            length = 0;
         } else {
             System.out.println("Goal was found");
+            
+            length = gScore.get(goal);
 
-            // Start from the end            
-            Point curr = new Point(grid.getEndX(), grid.getEndY());
+            // Start from the end
+            Point curr = goal;
+            Point prev;
             
             Stack<Point> path = new Stack<>();
             // Make our way back to the start
@@ -161,16 +168,19 @@ public class Path {
                     grid.nodes[fill.y][fill.x] = Node.PATH;
                 }
                 */
-
+                
+                prev = curr;
                 curr = cameFrom.get(curr);
-                length++;
             }
             
             if (draw) {
                 // Set delay based on path length such that path drawing always takes 3 seconds
-                long pathDelay = 3000 / path.size();
-
+                long pathDelay = 3_000_000_000L / path.size();
+                
+                long pathTime = System.nanoTime();
                 while(!path.empty()) {
+                    while (System.nanoTime() - pathTime < pathDelay);
+                    pathTime = System.nanoTime();
                     curr = path.pop();
                     mw.setRGB(curr.x, curr.y, Node.PATH.getRGB());
 
@@ -181,20 +191,16 @@ public class Path {
                             mw.setRGB(curr.x + d.x, curr.y + d.y, Node.PATH.getRGB());
                         }
                     }
-                    try {
-                        Thread.sleep(pathDelay);
-                    } catch (Exception e) {
-
-                    }
                 }
             }
+            
         }
         System.out.println("A* length = " + length);
 
         return length;
     }
     
-    public static int solveJPS(Grid grid, MapWindow mw, long delay) {
+    public static double solveJPS(Grid grid, MapWindow mw, long delay) {
         delay *= 1000;
         
         // JumpPoints in this set will not be processed again
@@ -264,33 +270,33 @@ public class Path {
         }
         
         // We found the goal
-        int length = goal.dst;
+        double length = goal.dst;
         
-        Stack<Point> s = new Stack<>();
-        
-        while(goal != null) {
-            s.add(new Point(goal.x, goal.y));
-            goal = goal.getParent();
-        }
-        
-        Point curr = s.pop();
-        
-        int pathDelay = 3000 / s.size();
-        
-        while(!s.empty()) {
-            Point next = s.pop();
-            if (mw != null) mw.drawPath(curr.x, curr.y, next.x, next.y);
-            curr = next;
-            try {
-                Thread.sleep(pathDelay);
-            } catch (Exception e) {
-                
+        if (mw != null) {
+            Stack<Point> s = new Stack<>();
+
+            while(goal != null) {
+                s.add(new Point(goal.x, goal.y));
+                goal = goal.getParent();
+            }
+
+            Point curr = s.pop();
+
+            long pathDelay = 5_000_000_000L / s.size();
+
+            long pathTime = System.nanoTime();
+            while(!s.empty()) {
+                while (System.nanoTime() - pathTime < pathDelay);
+                pathTime = System.nanoTime();
+                Point next = s.pop();
+                if (mw != null) mw.drawPath(curr.x, curr.y, next.x, next.y);
+                curr = next;
             }
         }
         
-        System.out.println("JPS length = " + (length + 1));
+        System.out.println("JPS length = " + length);
         if (mw != null) mw.jpsHasRun = true;
-        return length + 1;
+        return length;
     }
     
     /**
@@ -299,13 +305,13 @@ public class Path {
      * @param closed HashSet containing closed JumpPoints
      * @param p The Point this search will start from
      * @param dx Horizontal delta (the direction we'll step), either 1 or -1
-     * @param dst Currently unused
+     * @param dst Distance we've travelled so far
      * @param g Grid we are currently solving
      * @param mw MapWindow onto which our progress will be drawn
      * @param delay The minimum time between each operation in nanoseconds
      * @return All nodes that were found during this search
      */
-    private static ArrayList<JumpPoint> search_h(PriorityQueue<JumpPoint> nodes, HashMap<JumpPoint, JumpPoint> closed, Point p, final int dx, int dst, Grid g, MapWindow mw, long delay) {
+    private static ArrayList<JumpPoint> search_h(PriorityQueue<JumpPoint> nodes, HashMap<JumpPoint, JumpPoint> closed, Point p, final int dx, double dst, Grid g, MapWindow mw, long delay) {
         int x0 = p.x;
         int y = p.y;
         
@@ -328,7 +334,7 @@ public class Path {
             
             // If we find the goal, end this search
             if (x0 == g.getEndX() && y == g.getEndY()) {
-                JumpPoint jp = new JumpPoint(x0, y, Integer.MIN_VALUE / 2, dst);
+                JumpPoint jp = new JumpPoint(x0, y, Double.MIN_VALUE / 2, dst);
                 found_nodes.add(jp);
                 nodes.add(jp);
                 closed.put(jp, jp);
@@ -342,7 +348,7 @@ public class Path {
             // Did we find a forced neighbor or not
             boolean found = false;
             
-            int h = distance(x0, y, g.getEndX(), g.getEndY());
+            double h = distance(x0, y, g.getEndX(), g.getEndY());
             
             // If there is an obstacle above us but no obstacle up and to the
             // left or right depending on our direction,
@@ -413,7 +419,7 @@ public class Path {
      * @param delay
      * @return 
      */
-    private static ArrayList<JumpPoint> search_v(PriorityQueue<JumpPoint> nodes, HashMap<JumpPoint, JumpPoint> closed, Point p, final int dy, int dst, Grid g, MapWindow mw, long delay) {
+    private static ArrayList<JumpPoint> search_v(PriorityQueue<JumpPoint> nodes, HashMap<JumpPoint, JumpPoint> closed, Point p, final int dy, double dst, Grid g, MapWindow mw, long delay) {
         // This is literally the exact same method as search_h, except vertically
         // please refer to its documentation
         int x = p.x;
@@ -448,7 +454,7 @@ public class Path {
             
             boolean found = false;
             
-            int h = distance(x, y0, g.getEndX(), g.getEndY());
+            double h = distance(x, y0, g.getEndX(), g.getEndY());
             
             if (!valid(x + 1, y0, g) && valid(x + 1, y1, g)) {
                 JumpPoint jp = new JumpPoint(x, y0, 1, dy, h, dst);
@@ -501,13 +507,13 @@ public class Path {
      * @param closed HashSet containing closed JumpPoints
      * @param p The Point this search will start from
      * @param dx Horizontal delta (the direction we'll step), either 1 or -1
-     * @param dst Currently unused
+     * @param dst Distance we've travelled so far
      * @param g Grid we are currently solving
      * @param mw MapWindow onto which our progress will be drawn
      * @param delay The minimum time between each operation in nanoseconds
      * @return All nodes that were found during this search
      */
-    private static ArrayList<JumpPoint> search_d(PriorityQueue<JumpPoint> nodes, HashMap<JumpPoint, JumpPoint> closed, Point p, int dx, int dy, int dst, Grid g, MapWindow mw, long delay) {
+    private static ArrayList<JumpPoint> search_d(PriorityQueue<JumpPoint> nodes, HashMap<JumpPoint, JumpPoint> closed, Point p, int dx, int dy, double dst, Grid g, MapWindow mw, long delay) {
         int x0 = p.x;
         int y0 = p.y;
         
@@ -527,7 +533,7 @@ public class Path {
             x1 += dx;
             y1 += dy;
             
-            dst++;
+            dst += DIAG_COST;
             
             
             // If we're on an obstacle or out of the map, this search is done.
@@ -556,7 +562,7 @@ public class Path {
             boolean found = false;
             
             // Minimum distance to goal, used as our PriorityQueue's priority
-            int h = distance(x0, y1, g.getEndX(), g.getEndY());
+            double h = distance(x0, y1, g.getEndX(), g.getEndY());
             
             // Check for a diagonal forced neighbor
             // For example if our direction is up and to the right, this checks
@@ -674,15 +680,12 @@ public class Path {
      * @param endY Y coordinate of comparand
      * @return Distance between the two points, either Manhattan or Chebyshev distance
      */
-    static int distance(final Point a, final int endX, final int endY) {
-        int dx = Math.abs(endX - a.x);
-        int dy = Math.abs(endY - a.y);
+    static double distance(final Point a, final int endX, final int endY) {
+        double dx = Math.abs(endX - a.x);
+        double dy = Math.abs(endY - a.y);
 
-        if (diagonal) {
-            return Math.max(dx, dy);
-        } else {
-            return dx + dy;
-        }
+        
+        return Math.sqrt(dx*dx + dy*dy);
     }
     
     /**
@@ -693,11 +696,11 @@ public class Path {
      * @param endY Y coordinate of point to be checked against
      * @return 
      */
-    static int distance(final int x, final int y, final int endX, final int endY) {        
-        int dx = Math.abs(endX - x);
-        int dy = Math.abs(endY - y);
+    static double distance(final int x, final int y, final int endX, final int endY) {        
+        double dx = Math.abs(endX - x);
+        double dy = Math.abs(endY - y);
         
-        return Math.max(dx, dy);
+        return Math.sqrt(dx*dx + dy*dy);
     }
 
     /**
@@ -733,12 +736,12 @@ class JumpPoint implements Comparable<JumpPoint>{
     final int y;
     final int dx;
     final int dy;
-    final int dst;
-    private final int h;
-    private final int f;
+    final double dst;
+    private final double h;
+    private final double f;
     private JumpPoint parent;
     
-    JumpPoint(int x, int y, int h, int dst) {
+    JumpPoint(int x, int y, double h, double dst) {
         this.x = x;
         this.y = y;
         this.h = h;
@@ -748,7 +751,7 @@ class JumpPoint implements Comparable<JumpPoint>{
         this.f = dst + h;
     }
     
-    JumpPoint(int x, int y, int dx, int dy, int h, int dst) {
+    JumpPoint(int x, int y, int dx, int dy, double h, double dst) {
         this.x = x;
         this.y = y;
         this.dx = dx;
@@ -813,6 +816,6 @@ class JumpPoint implements Comparable<JumpPoint>{
     public int compareTo(JumpPoint other) {
         // This will be used by PriorityQueue, so we want it to check just
         // the heuristic value
-        return this.f - other.f;
+        return Double.compare(this.f, other.f);
     }
 }

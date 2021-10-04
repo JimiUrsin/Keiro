@@ -5,12 +5,12 @@ import java.util.Objects;
 class Point implements Comparable {
     int x;
     int y;
-    int prio;
+    double prio;
 
-    Point(final int newx, final int newy, int newprio) {
-        this.x = newx;
-        this.y = newy;
-        this.prio = newprio;
+    Point(final int x, final int y, double prio) {
+        this.x = x;
+        this.y = y;
+        this.prio = prio;
     }
 
     Point(final int newx, final int newy) {
@@ -19,7 +19,7 @@ class Point implements Comparable {
         this.prio = 0;
     }
 
-    void setPrio(int newprio) {
+    void setPrio(double newprio) {
         this.prio = newprio;
     }
     
@@ -40,6 +40,6 @@ class Point implements Comparable {
     @Override
     public int compareTo(Object o) {
         Point other = (Point) o;
-        return this.prio - other.prio;
+        return Double.compare(this.prio, other.prio);
     }
 }

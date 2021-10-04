@@ -39,15 +39,15 @@ public class PathTest {
     @Test
     public void testAStar() {
         Path.setDiagonal(false);
-        int length = Path.solveAStar(g, null, 0);
-        assertEquals("Path was not shortest possible", length, 19);
+        double length = Path.solveAStar(g, null, 0);
+        assertEquals("Path was not shortest possible", length, 18d, 0.1);
     }
     
     @Test
     public void testAStarDiagonal() {
         Path.setDiagonal(true);
-        int length = Path.solveAStar(g, null, 0);
-        assertEquals("Path was not shortest possible", length, 10);
+        double length = Path.solveAStar(g, null, 0);
+        assertEquals("Path was not shortest possible", length, Math.sqrt(2) * 9d, 0.1);
     }
     
     @Test
@@ -59,16 +59,16 @@ public class PathTest {
         for(int x = 1; x < 9; x++) {
             g.nodes[1][x] = Node.BLOCKED;
         }
-        int length = Path.solveAStar(g, null, 0);
+        double length = Path.solveAStar(g, null, 0);
         
-        assertEquals("Path was not shortest possible", length, 18);        
+        assertEquals("Path was not shortest possible", 16 + Math.sqrt(2), length, 0.1);        
     }
     
     @Test
     public void testJPS() {
         Path.setDiagonal(true);
-        int length = Path.solveJPS(g, null, 0);
-        assertEquals("Path was not shortest possible", 10, length);
+        double length = Path.solveJPS(g, null, 0);
+        assertEquals("Path was not shortest possible", Math.sqrt(2) * 9d, length, 0.1);
     }
     
     @Test
@@ -80,8 +80,8 @@ public class PathTest {
         for(int x = 1; x < 9; x++) {
             g.nodes[1][x] = Node.BLOCKED;
         }
-        int length = Path.solveJPS(g, null, 0);
+        double length = Path.solveJPS(g, null, 0);
         
-        assertEquals("Path was not shortest possible", 18, length);        
+        assertEquals("Path was not shortest possible", 16 + Math.sqrt(2), length, 0.1);        
     }
 }
