@@ -7,7 +7,7 @@ A program for comparing pathfinding algorithms with visualizations.
 - It will prompt you for a PNG file, select one of the maps you downloaded
 - Click once to set your starting point on some open spot, you should hear a sound
 - Click again to set your goal
-- Click once more to start running the JPS (this doesnt actually return the best path for routes with lots of obstacles)
+- Click once more to start running Jump Point Search
 - When that's done, click once more and it will run the A\* algorithm
 - The program is done, if you want to try another map then close and rerun the program
 
