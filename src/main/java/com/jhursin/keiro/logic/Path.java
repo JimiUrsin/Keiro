@@ -151,7 +151,6 @@ public class Path {
 
             // Start from the end
             Point curr = goal;
-            Point prev;
             
             Stack<Point> path = new Stack<>();
             // Make our way back to the start
@@ -169,7 +168,6 @@ public class Path {
                 }
                 */
                 
-                prev = curr;
                 curr = cameFrom.get(curr);
             }
             
@@ -193,7 +191,6 @@ public class Path {
                     }
                 }
             }
-            
         }
         System.out.println("A* length = " + length);
 

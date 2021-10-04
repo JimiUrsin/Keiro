@@ -243,6 +243,10 @@ public class MapWindow {
         
         for (int dy = 0; dy < d; dy++) {
             for (int dx = 0; dx < d; dx++) {
+                if (x + dx < 0 || x + dx >= this.bimg.getWidth()
+                  || y + dy < 0 || y + dy >= this.bimg.getHeight()) {
+                    continue;
+                }
                 this.setRGB(x+dx, y+dy, Node.START.getRGB());
             }
         }
@@ -256,6 +260,10 @@ public class MapWindow {
         
         for (int dy = 0; dy < d; dy++) {
             for (int dx = 0; dx < d; dx++) {
+                if (x + dx < 0 || x + dx >= this.bimg.getWidth()
+                  || y + dy < 0 || y + dy >= this.bimg.getHeight()) {
+                    continue;
+                }
                 this.setRGB(x+dx, y+dy, Node.END.getRGB());
             }
         }
