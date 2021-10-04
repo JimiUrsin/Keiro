@@ -10,6 +10,19 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseEvent;
+import java.awt.image.DataBufferByte;
+import java.awt.image.DataBufferInt;
+import java.util.ArrayList;
+
+class Point {
+    int x;
+    int y;
+    
+    Point(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+}
 
 /**
  * This window contains a map that will be solved.
@@ -24,8 +37,10 @@ public class MapWindow {
     public boolean goalSet;
     public boolean jpsHasRun;
     public boolean aStarHasRun;
+    private boolean jpsRunning = false;
     Runnable jps;
     Runnable aStar;
+    ArrayList<Point> tempPixels;
 
     /**
      * Construct a window with a given image in it.
@@ -90,6 +105,7 @@ public class MapWindow {
                     }
                     System.out.println(String.format("Setting start to (%d, %d)", e.getX(), e.getY()));
                     g.setStart(e.getX(), e.getY());
+                    drawStart(e.getX(), e.getY());
                     startSet = true;
                     Toolkit.getDefaultToolkit().beep();
                 } else if (!goalSet) {
@@ -99,15 +115,17 @@ public class MapWindow {
                     } else if (g.nodes[e.getY()][e.getX()] == Node.BLOCKED) {
                         return;
                     }
+                    drawEnd(e.getX(), e.getY());
                     System.out.println(String.format("Setting goal to (%d, %d)", e.getX(), e.getY()));
                     g.setEnd(e.getX(), e.getY());
                     goalSet = true;
                     Toolkit.getDefaultToolkit().beep();
                 } else {
-                    if (!jpsHasRun) {
+                    if (!jpsHasRun && !jpsRunning) {
                         Thread t = new Thread(jps);
                         t.start();
-                    } else if (!aStarHasRun) {
+                        jpsRunning = true;
+                    } else if (jpsHasRun && !aStarHasRun) {
                         for(int y = 0; y < bi.getHeight(); y++) {
                             for(int x = 0; x < bi.getWidth(); x++) {
                                 bimg.setRGB(x, y, bimg2.getRGB(x, y));
@@ -152,6 +170,7 @@ public class MapWindow {
         this.aStarHasRun = false;
         this.startSet = false;
         this.goalSet = false;
+        this.tempPixels = new ArrayList<>();
         constructMapWindow(bimg, g);
     }
     
@@ -200,6 +219,49 @@ public class MapWindow {
     }
     
     /**
+     * Set a pixel to a certain color temporarily.
+     * @param x X component of pixel to be changed
+     * @param y Y component of pixel to be changed
+     */
+    public void setTemp(int x, int y) {
+        setRGB(x, y, Node.DROPPED.getRGB());
+        tempPixels.add(new Point(x, y));
+    }
+    
+    public void flushTemp() {
+        for (Point p : tempPixels) {
+            setRGB(p.x, p.y, Node.QUEUE.getRGB());
+        }
+        tempPixels.clear();
+    }
+    
+    // TODO Check out of bounds
+    private void drawStart(int x, int y) {
+        int d = Math.min(this.bimg.getHeight(), this.bimg.getWidth()) / 100 + 1;
+        x -= d / 2;
+        y -= d / 2;
+        
+        for (int dy = 0; dy < d; dy++) {
+            for (int dx = 0; dx < d; dx++) {
+                this.setRGB(x+dx, y+dy, Node.START.getRGB());
+            }
+        }
+    }
+    
+    // TODO Check out of bounds
+    private void drawEnd(int x, int y) {
+        int d = Math.min(this.bimg.getHeight(), this.bimg.getWidth()) / 100 + 1;
+        x -= d / 2;
+        y -= d / 2;
+        
+        for (int dy = 0; dy < d; dy++) {
+            for (int dx = 0; dx < d; dx++) {
+                this.setRGB(x+dx, y+dy, Node.END.getRGB());
+            }
+        }
+    }
+    
+    /**
      * Draws a path between two points
      * @param x1 X component of point 1
      * @param y1 Y component of point 1
@@ -224,8 +286,6 @@ public class MapWindow {
         }
         
         while (x1 != x2 || y1 != y2) {
-            System.out.println("x1 = " + x1 + ", y1 = " + y1);
-            System.out.println("x2 = " + x2 + ", y2 = " + y2);
             setRGB(x1, y1, Node.PATH.getRGB());
             x1 += dx;
             y1 += dy;

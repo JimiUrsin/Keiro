@@ -55,22 +55,9 @@ public final class FileToImage {
         boolean endSet = false;
         for (int y = 0; y < bimg.getHeight(); y++) {
             for (int x = 0; x < bimg.getWidth(); x++) {
-                grid.nodes[y][x] = Node.match(bimg.getRGB(x, y));
-
-                if (grid.nodes[y][x] == Node.START) {
-                    if (startSet) {
-                        throw new IllegalArgumentException("There can only be a single starting point on the map");
-                    }
-                    grid.setStart(x, y);
-                    startSet = true;
-                }
-                if (grid.nodes[y][x] == Node.END) {
-                    if (endSet) {
-                        throw new IllegalArgumentException("There can only be a single ending point on the map");
-                    }
-                    grid.setEnd(x, y);
-                    endSet = true;
-                }
+                Node n = Node.match(bimg.getRGB(x, y));
+                if (n == Node.BLOCKED) grid.obstacles++;
+                grid.nodes[y][x] = n;
             }
         }
 

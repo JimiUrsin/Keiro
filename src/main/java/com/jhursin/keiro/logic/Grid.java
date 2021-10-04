@@ -12,6 +12,8 @@ public class Grid {
     private int endY = -1;
 
     public Node[][] nodes;
+    
+    public int obstacles;
 
     public Grid(final int width, final int height) {
         this.nodes = new Node[height][width];

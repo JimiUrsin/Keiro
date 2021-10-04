@@ -263,21 +263,32 @@ public class Path {
             return 0;
         }
         
-        int length = 0;
-        JumpPoint curr = goal;
+        // We found the goal
+        int length = goal.dst;
         
-        while(true) {
-            JumpPoint next = curr.getParent();
-            if (next == null) break;            
-            length += distance(curr.x, curr.y, next.x, next.y);
-            if (mw != null) mw.drawPath(curr.x, curr.y, next.x, next.y);
-            curr = next;
+        Stack<Point> s = new Stack<>();
+        
+        while(goal != null) {
+            s.add(new Point(goal.x, goal.y));
+            goal = goal.getParent();
         }
         
-        System.out.println("JPS length = " + (goal.dst + 1));
-        System.out.println("JPS length 2 = " + (length + 1));
+        Point curr = s.pop();
         
-        // We found the goal
+        int pathDelay = 3000 / s.size();
+        
+        while(!s.empty()) {
+            Point next = s.pop();
+            if (mw != null) mw.drawPath(curr.x, curr.y, next.x, next.y);
+            curr = next;
+            try {
+                Thread.sleep(pathDelay);
+            } catch (Exception e) {
+                
+            }
+        }
+        
+        System.out.println("JPS length = " + (length + 1));
         if (mw != null) mw.jpsHasRun = true;
         return length + 1;
     }
@@ -313,7 +324,7 @@ public class Path {
                 return found_nodes;
             }
             
-            if (mw != null) mw.setRGB(x0, y, Node.QUEUE.getRGB());
+            if (mw != null) mw.setTemp(x0, y);
             
             // If we find the goal, end this search
             if (x0 == g.getEndX() && y == g.getEndY()) {
@@ -422,7 +433,7 @@ public class Path {
                 return found_nodes;
             }
             
-            if (mw != null) mw.setRGB(x, y0, Node.QUEUE.getRGB());
+            if (mw != null) mw.setTemp(x, y0);
             
             if (x == g.getEndX() && y0 == g.getEndY()) {
                 //System.out.println("Search_v found the goal, returning\n");
@@ -522,6 +533,7 @@ public class Path {
             // If we're on an obstacle or out of the map, this search is done.
             if (!valid(x1, y1, g)) {
                 //System.out.println("Search_d was blocked, ending search\n");
+                if (mw != null) mw.flushTemp();
                 return found_nodes;
             }
             
@@ -640,6 +652,7 @@ public class Path {
                     closed.put(jp, jp);
                     nodes.add(jp);
                     found_nodes.add(jp);
+                    if (mw != null) mw.flushTemp();
                     return found_nodes;
                 }
             }
