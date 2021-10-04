@@ -3,6 +3,7 @@ package io;
 import com.jhursin.keiro.io.FileToImage;
 import com.jhursin.keiro.io.ImageToFile;
 import java.awt.image.BufferedImage;
+import java.io.File;
 
 import static org.junit.Assert.fail;
 import static org.junit.Assert.assertFalse;
@@ -63,5 +64,7 @@ public class IOTest {
                 }
             }
         }
+        File file = new File(filename);
+        file.delete();
     }
 }
