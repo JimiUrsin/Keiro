@@ -29,6 +29,15 @@ public class PathTest {
         return g;
     }
     
+    private void addObstacles(Grid g) {        
+        for(int y = 1; y < 9; y++) {
+            g.nodes[y][1] = Node.BLOCKED;
+        }
+        for(int x = 1; x < 9; x++) {
+            g.nodes[1][x] = Node.BLOCKED;
+        }
+    }
+    
     Grid g;
     
     @Before
@@ -37,28 +46,14 @@ public class PathTest {
     }
     
     @Test
-    public void testAStar() {
-        Path.setDiagonal(false);
-        double length = Path.solveAStar(g, null, 0);
-        assertEquals("Path was not shortest possible", length, 18d, 0.1);
-    }
-    
-    @Test
     public void testAStarDiagonal() {
-        Path.setDiagonal(true);
         double length = Path.solveAStar(g, null, 0);
         assertEquals("Path was not shortest possible", length, Math.sqrt(2) * 9d, 0.1);
     }
     
     @Test
     public void testAStarWithObstacles() {
-        Path.setDiagonal(true);
-        for(int y = 1; y < 9; y++) {
-            g.nodes[y][1] = Node.BLOCKED;
-        }
-        for(int x = 1; x < 9; x++) {
-            g.nodes[1][x] = Node.BLOCKED;
-        }
+        addObstacles(g);
         double length = Path.solveAStar(g, null, 0);
         
         assertEquals("Path was not shortest possible", 16 + Math.sqrt(2), length, 0.1);        
@@ -66,20 +61,13 @@ public class PathTest {
     
     @Test
     public void testJPS() {
-        Path.setDiagonal(true);
         double length = Path.solveJPS(g, null, 0);
         assertEquals("Path was not shortest possible", Math.sqrt(2) * 9d, length, 0.1);
     }
     
     @Test
     public void testJPSWithObstacles() {
-        Path.setDiagonal(true);
-        for(int y = 1; y < 9; y++) {
-            g.nodes[y][1] = Node.BLOCKED;
-        }
-        for(int x = 1; x < 9; x++) {
-            g.nodes[1][x] = Node.BLOCKED;
-        }
+        addObstacles(g);
         double length = Path.solveJPS(g, null, 0);
         
         assertEquals("Path was not shortest possible", 16 + Math.sqrt(2), length, 0.1);        

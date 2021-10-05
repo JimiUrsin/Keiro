@@ -14,8 +14,7 @@ public class Main {
         // The filename will be the absolute (i.e. not relative) path
         // This is less error prone
         String filename = MainWindow.getFileFromUser();
-        if (filename.equals("")) System.exit(0);
-        System.out.println("filename = " + filename);
+        if (filename == null) System.exit(0);
         
         // TODO Change these such that the file doesn't need to be read twice
         // and we can just read from BufferedImage to Grid or vice versa
@@ -24,8 +23,7 @@ public class Main {
         
         // The user will see the actual colors of the map since we make the window
         // based on the read image and not the grid
-        MapWindow mw = new MapWindow(bimg, grid);
-        
+        MapWindow mw = new MapWindow(bimg, grid);        
         
         // Run these on their own thread so picture processing can happen while
         // the algorithm is solving
@@ -43,11 +41,9 @@ public class Main {
             }
         };
         
-        // This is not a very good way to do this, I know, sorry.
         mw.setJPS(JPS);
         mw.setAStar(aStar);
         
         mw.show();
-        Path.setDiagonal(true);
     }
 }

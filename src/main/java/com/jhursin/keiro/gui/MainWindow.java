@@ -74,7 +74,7 @@ public final class MainWindow {
         } else {
             System.err.println("No file from user");
         }
-        return "";
+        return null;
     }
     
     public static int showPopup() {

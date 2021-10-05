@@ -1,46 +1,27 @@
 package com.jhursin.keiro.logic;
 
 import com.jhursin.keiro.gui.MapWindow;
-import com.jhursin.keiro.io.FileToImage;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Objects;
 import java.util.PriorityQueue;
-import java.util.Set;
 import java.util.Stack;
 
 /**
  * Contains pathfinding algorithms.
  */
 public class Path {
-
-    // Is diagonal movement allowed or not
-    private static boolean diagonal;
-    static Point[] deltas;
+    private static final Point[] deltas = {
+        new Point(-1,  0),
+        new Point( 0, +1),
+        new Point(+1,  0),
+        new Point( 0, -1),
+        new Point(+1, +1),
+        new Point(+1, -1),
+        new Point(-1, -1),
+        new Point(-1, +1)
+    };
+    
     private static final double DIAG_COST = Math.sqrt(2D);
-
-    // Points whose x and y components can be summed with a point to get
-    // Points for all directions we can move to
-    private static void createDeltas() {
-        deltas = new Point[diagonal ? 8 : 4];
-        deltas[0] = new Point(-1,  0);
-        deltas[1] = new Point( 0, +1);
-        deltas[2] = new Point(+1,  0);
-        deltas[3] = new Point( 0, -1);
-
-        if (diagonal) {
-            deltas[4] = new Point(+1, +1);
-            deltas[5] = new Point(+1, -1);
-            deltas[6] = new Point(-1, -1);
-            deltas[7] = new Point(-1, +1);
-        }
-    }
-
-    public static void setDiagonal(final boolean diag) {
-        diagonal = diag;
-        createDeltas();
-    }
 
     /**
      * Solves a grid with the A* algorithm, then draws its path on the grid
@@ -56,10 +37,6 @@ public class Path {
         if (mw == null) {
             draw = false;
         }
-        
-        if (deltas == null) {
-            createDeltas();
-        }
 
         // Open nodes
         PriorityQueue<Point> open = new PriorityQueue<>();
@@ -68,6 +45,7 @@ public class Path {
         Point start = new Point(grid.getStartX(), grid.getStartY());
         start.setPrio(distance(start, grid.getEndX(), grid.getEndY()));
         open.add(start);
+        
         if (draw) {
             mw.setRGB(start.x, start.y, Node.QUEUE.getRGB());
         }
@@ -141,6 +119,7 @@ public class Path {
         
         double length;
         Point goal = new Point(grid.getEndX(), grid.getEndY());
+        
         if (cameFrom.get(goal) == null) {
             System.out.println("Goal was not found");
             length = 0;
@@ -148,33 +127,24 @@ public class Path {
             System.out.println("Goal was found");
             
             length = gScore.get(goal);
-
-            // Start from the end
-            Point curr = goal;
-            
-            Stack<Point> path = new Stack<>();
-            // Make our way back to the start
-            while (curr != start) {
-                // System.out.println(String.format("Adding (%d, %d) to path", curr.x, curr.y));
-                grid.nodes[curr.y][curr.x] = Node.PATH;
-                path.add(curr);
-                /*
-                // Fill neighbours too so the line is a bit thicker
-                // TODO Make this a variable size
-                for(Point d: deltas) {
-                    Point fill = new Point(curr.x + d.x, curr.y + d.y);
-                    if (!valid(fill, grid)) continue;                
-                    grid.nodes[fill.y][fill.x] = Node.PATH;
-                }
-                */
-                
-                curr = cameFrom.get(curr);
-            }
             
             if (draw) {
+                // Start from the end
+                Point curr = goal;
+
+                Stack<Point> path = new Stack<>();
+
+                // Make our way back to the start
+                while (curr != start) {
+                    grid.nodes[curr.y][curr.x] = Node.PATH;
+                    path.add(curr);
+
+                    curr = cameFrom.get(curr);
+                }
+
                 // Set delay based on path length such that path drawing always takes 3 seconds
                 long pathDelay = 3_000_000_000L / path.size();
-                
+
                 long pathTime = System.nanoTime();
                 while(!path.empty()) {
                     while (System.nanoTime() - pathTime < pathDelay);
@@ -198,6 +168,7 @@ public class Path {
     }
     
     public static double solveJPS(Grid grid, MapWindow mw, long delay) {
+        // Nanoseconds -> microseconds
         delay *= 1000;
         
         // JumpPoints in this set will not be processed again
@@ -205,10 +176,6 @@ public class Path {
         
         // Contains all JumpPoints that need to be opened
         PriorityQueue<JumpPoint> nodes = new PriorityQueue<>();
-        
-        // Diagonal movement must be allowed for JPS
-        diagonal = true;
-        createDeltas();
         
         // Add JumpPoints into all 8 directions from the start
         for (Point d : deltas) {
@@ -232,17 +199,12 @@ public class Path {
                 break;
             }
             
-            // TODO Make a better color for JumpPoints
-            if (mw != null) mw.setRGB(node.x, node.y, Node.DROPPED.getRGB());
+            if (mw != null) mw.setRGB(node.x, node.y, Node.DROPPED.getRGB());            
             
-            
-            // System.out.println("Checking node (" + node.x + ", " + node.y + "), direction (" + node.dx + ", " + node.dy + ")");
-            
-            
-            // Check which direction the latest node is going to based on
-            // the delta values dx and dy, and call appropriate method
             ArrayList<JumpPoint> found_nodes;
             
+            // Check which direction the latest node is going to based on
+            // the movement delta values dx and dy, and call appropriate method
             if (node.dx == 0) {
                 found_nodes = search_v(nodes, closed, new Point(node.x, node.y), node.dy, node.dst, grid, mw, delay);
             } else if (node.dy == 0) {
@@ -256,10 +218,12 @@ public class Path {
             for (JumpPoint jp : found_nodes) {
                 jp.setParent(node);
             }
+            
             time = System.nanoTime();
         }
         
         JumpPoint goal = closed.get(new JumpPoint(grid.getEndX(), grid.getEndY(), 0, 0, 0, Integer.MAX_VALUE));
+        
         if (goal == null) {
             // Goal wasn't found
             if (mw != null) mw.jpsHasRun = true;
@@ -270,18 +234,22 @@ public class Path {
         double length = goal.dst;
         
         if (mw != null) {
+            // We're moving from the goal to the start, so we need a LIFO data
+            // structure to reverse with no fuss
             Stack<Point> s = new Stack<>();
-
+            
+            // Create our path by jumping from parent to parent
             while(goal != null) {
                 s.add(new Point(goal.x, goal.y));
                 goal = goal.getParent();
             }
-
+            
             Point curr = s.pop();
 
             long pathDelay = 5_000_000_000L / s.size();
 
             long pathTime = System.nanoTime();
+            
             while(!s.empty()) {
                 while (System.nanoTime() - pathTime < pathDelay);
                 pathTime = System.nanoTime();
@@ -315,7 +283,6 @@ public class Path {
         // All JumpPoints we found during this search
         ArrayList<JumpPoint> found_nodes = new ArrayList<>();
         
-        //System.out.println(String.format("Starting search_h from (%d, %d) with direction %d", x0, y, dx));
         while (true) {
             // Move one step to the given direction
             x0 += dx;
@@ -323,10 +290,10 @@ public class Path {
             
             // If we encounter an obstacle or the end of the map, end this search
             if (!valid(x0, y, g)) {
-                //System.out.println("Search_h found an obstacle, ending search\n");
                 return found_nodes;
             }
             
+            // Show the user we're currently processing this area
             if (mw != null) mw.setTemp(x0, y);
             
             // If we find the goal, end this search
@@ -335,7 +302,6 @@ public class Path {
                 found_nodes.add(jp);
                 nodes.add(jp);
                 closed.put(jp, jp);
-                // System.out.println("Search_h found the goal, ending search\n");
                 return found_nodes;
             }
             
@@ -347,14 +313,14 @@ public class Path {
             
             double h = distance(x0, y, g.getEndX(), g.getEndY());
             
-            // If there is an obstacle above us but no obstacle up and to the
+            // If there is an obstacle below us but no obstacle up and to the
             // left or right depending on our direction,
             // create a jump point from here to there
             if (!valid(x0, y + 1, g) && valid(x1, y + 1, g)) {
                 JumpPoint jp = new JumpPoint(x0, y, dx, 1, h, dst);
                 JumpPoint find = closed.get(jp);
                 
-                // You will see the following four lines quite a lot, so read this
+                // You will see the following couple lines quite a lot, so read this
                 // If we find a potential JumpPoint, check to see if the same
                 // JumpPoint can be found in the closed list. If yes, we will
                 // replace it if our current distance travelled is less than
@@ -367,13 +333,10 @@ public class Path {
                     nodes.add(jp);
                     found_nodes.add(jp);      
                     found = true;
-                    //System.out.println("Search_h found forced neighbour above " + String.format("(%d, %d), direction %d", x0, y, dx));
-                    //System.out.println(String.format("(%d, %d), direction (%d, %d)", x0, y, dx, 1));
-                }
-                
+                }                
             }
             
-            // Same as above, but this time we're checking below us
+            // Same as the last one, but this time check above
             if (!valid(x0, y - 1, g) && valid(x1, y - 1, g)) {
                 JumpPoint jp = new JumpPoint(x0, y, dx, -1, h, dst);
                 JumpPoint find = closed.get(jp);
@@ -382,13 +345,10 @@ public class Path {
                     nodes.add(jp);
                     found_nodes.add(jp);
                     found = true;
-                    // System.out.println("Search_h found forced neighbour below " + String.format("(%d, %d), direction %d \n", x0, y, dx));
                 }
             }
             
-            // If we found a forced neighbor, add our 
-            // current route as a jump point and return           
-            
+            // If we found a forced neighbor, add our current route as a jump point and return            
             if (found) {
                 JumpPoint jp = new JumpPoint(x0, y, dx, 0, h, dst);
                 JumpPoint find = closed.get(jp);
@@ -396,7 +356,6 @@ public class Path {
                     closed.put(jp, jp);
                     nodes.add(jp);
                     found_nodes.add(jp);
-                    //System.out.println(String.format("Search_h adds self back to list and returns on (%d, %d) with direction %d\n", x0, y, dx));
                 }
                 return found_nodes;
             }
@@ -419,28 +378,25 @@ public class Path {
     private static ArrayList<JumpPoint> search_v(PriorityQueue<JumpPoint> nodes, HashMap<JumpPoint, JumpPoint> closed, Point p, final int dy, double dst, Grid g, MapWindow mw, long delay) {
         // This is literally the exact same method as search_h, except vertically
         // please refer to its documentation
+        // This is done for speed and readability        
+        
         int x = p.x;
         int y0 = p.y;
-        
-        // System.out.println(String.format("Starting search_v from (%d, %d) with direction %d", x, y0, dy));
         
         ArrayList<JumpPoint> found_nodes = new ArrayList<>();
         
         while (true) {
-            // System.out.println("search_v y0 = " + y0);
             y0 += dy;
             dst++;
             
             if (!valid(x, y0, g)) {
-                //System.out.println("Search_v found obstacle, returning\n");
                 return found_nodes;
             }
             
             if (mw != null) mw.setTemp(x, y0);
             
             if (x == g.getEndX() && y0 == g.getEndY()) {
-                //System.out.println("Search_v found the goal, returning\n");
-                JumpPoint jp = new JumpPoint(x, y0, Integer.MIN_VALUE / 2, dst);
+                JumpPoint jp = new JumpPoint(x, y0, Double.MIN_VALUE / 2, dst);
                 found_nodes.add(jp);
                 nodes.add(jp);
                 closed.put(jp, jp);
@@ -460,7 +416,6 @@ public class Path {
                     closed.put(jp, jp);
                     nodes.add(jp);
                     found_nodes.add(jp);
-                    //System.out.println(String.format("Search_v found forced neighbour to the right at (%d, %d) direction %d", x, y0, dy));
                     found = true;
                     
                 }
@@ -472,16 +427,12 @@ public class Path {
                     closed.put(jp, jp);
                     nodes.add(jp);
                     found_nodes.add(jp);
-                    // System.out.println(String.format("Search_v found forced neighbour to the left at (%d, %d) direction %d", x, y0, dy));
                     found = true;
                     
                 }
-            }
-            
+            }            
             
             if (found) {
-                
-                //System.out.println(String.format("Search_v ends search because forced neighbour was found, adding (%d, %d) with direction %d back to queue\n", x, y0, dy));
                 JumpPoint jp = new JumpPoint(x, y0, 0, dy, h, dst);
                 JumpPoint find = closed.get(jp);
                 if (find == null ? true : jp.dst < find.dst) {
@@ -489,11 +440,8 @@ public class Path {
                     nodes.add(jp);
                     found_nodes.add(jp);
                 }
-                return found_nodes;
-                
-            }
-            
-            
+                return found_nodes;                
+            }        
         }
     }
     
@@ -514,8 +462,6 @@ public class Path {
         int x0 = p.x;
         int y0 = p.y;
         
-        //System.out.println(String.format("Starting search_d from (%d, %d) with direction (%d, %d)", x0, y0, dx, dy));
-        
         // All JumpPoints we found during this search
         ArrayList<JumpPoint> found_nodes = new ArrayList<>();
         
@@ -532,17 +478,15 @@ public class Path {
             
             dst += DIAG_COST;
             
-            
             // If we're on an obstacle or out of the map, this search is done.
             if (!valid(x1, y1, g)) {
-                //System.out.println("Search_d was blocked, ending search\n");
                 if (mw != null) mw.flushTemp();
                 return found_nodes;
             }
             
             // If we found the end, this search is done.
             if (x1 == g.getEndX() && y1 == g.getEndY()) {
-                JumpPoint jp = new JumpPoint(x1, y1, Integer.MIN_VALUE / 2, dst);
+                JumpPoint jp = new JumpPoint(x1, y1, Double.MIN_VALUE / 2, dst);
                 found_nodes.add(jp);
                 nodes.add(jp);
                 closed.put(jp, jp);
@@ -576,7 +520,6 @@ public class Path {
                     found_nodes.add(jp);
                     
                     found = true;
-                    // System.out.println("Search_d found forced neighbor from (" + x1 + ", " + y1 + "), direction (" + dx + ", " + (-dy) + ")");
                 }
             }
             
@@ -590,7 +533,6 @@ public class Path {
                     found_nodes.add(jp);
                     
                     found = true;
-                    //System.out.println("Search_d found forced neighbor from (" + x1 + ", " + y1 + "), direction (" + dx + ", " + (-dy) + ")");
                 }
             }
             
@@ -610,8 +552,6 @@ public class Path {
             JumpPoint h_find = closed.get(h_jp);
             
             if (h_find == null ? true : h_jp.dst < h_find.dst) {
-                
-                //System.out.println("Search_d calls search_h\n");
                 ArrayList<JumpPoint> h_found = search_h(nodes, closed, new Point(x1, y1), dx, dst, g, mw, delay);
                 closed.put(h_jp, h_jp);
                 
@@ -630,8 +570,6 @@ public class Path {
             JumpPoint v_jp = new JumpPoint(x1, y1, 0, dy, h, dst);
             JumpPoint v_find = closed.get(v_jp);
             if (v_find == null ? true : v_jp.dst < v_find.dst) {
-
-                //System.out.println("Search_d calls search_v\n");
                 ArrayList<JumpPoint> v_found = search_v(nodes, closed, new Point(x1, y1), dy, dst, g, mw, delay);
                 closed.put(v_jp, v_jp);
                 if (!v_found.isEmpty()) {
@@ -646,8 +584,6 @@ public class Path {
             // If our horizontal or vertical search found nodes, stop this search
             // for now and add this back to the queue to be opened later
             if (h_done || v_done) {
-                //System.out.println("Search_d ends");
-                
                 JumpPoint jp = new JumpPoint(x1, y1, dx, dy, 1, dst);
                 
                 JumpPoint find = closed.get(jp);
@@ -664,31 +600,26 @@ public class Path {
             x0 = x1;
             y0 = y1;
         }
-    }
-    
-    
+    }    
 
     /**
-     * Returns the distance between a point and an (x, y) coordinate.
-     * If diagonal movement is allowed, returns the Chebyshev distance,
-     * and Manhattan distance otherwise
-     * @param a Point that will be compared with coordinates
+     * Returns the Euclidean distance between a point and an (x, y) coordinate.
+     * @param a Point whose coordinates will be compared
      * @param endX X coordinate of comparand
      * @param endY Y coordinate of comparand
-     * @return Distance between the two points, either Manhattan or Chebyshev distance
+     * @return Distance between the two points
      */
     static double distance(final Point a, final int endX, final int endY) {
         double dx = Math.abs(endX - a.x);
         double dy = Math.abs(endY - a.y);
-
         
         return Math.sqrt(dx*dx + dy*dy);
     }
     
     /**
-     * Return the Chebyshev distance between two points
-     * @param x X coordinate of point to be checked
-     * @param y Y coordinate of point to be checked
+     * Return the Euclidean distance between two points
+     * @param x X of comparand 1
+     * @param y Y of comparand 1
      * @param endX X coordinate of point to be checked against
      * @param endY Y coordinate of point to be checked against
      * @return 
@@ -702,15 +633,15 @@ public class Path {
 
     /**
      * Checks if a given Point is valid on a given Grid.
-     * i.e. not below minimum or above maximum dimensions
+     * i.e. not below minimum or above maximum dimensions or blocked by an obstacle
      * @param a Point to be checked
      * @param g The Grid the point will be checked against
      * @return Whether the Point is a valid location on the grid
      */
     static boolean valid(final Point a, final Grid g) {
-        return (a.x >= 0 && a.x < g.nodes[0].length)
-               && (a.y >= 0 && a.y < g.nodes.length)
-               && (g.nodes[a.y][a.x] != Node.BLOCKED);
+        return (g.nodes[a.y][a.x] != Node.BLOCKED)
+            && (a.x >= 0 && a.x < g.nodes[0].length)
+            && (a.y >= 0 && a.y < g.nodes.length);
     }
     
     /**
@@ -721,98 +652,8 @@ public class Path {
      * @return Whether the Point is a valid location on the grid
      */
     static boolean valid(final int x, final int y, final Grid g) {
-        return (x >= 0 && x < g.nodes[0].length)
+        return (g.nodes[y][x] != Node.BLOCKED)
                && (y >= 0 && y < g.nodes.length)
-               && (g.nodes[y][x] != Node.BLOCKED);
-    }
-}
-
-    
-class JumpPoint implements Comparable<JumpPoint>{
-    final int x;
-    final int y;
-    final int dx;
-    final int dy;
-    final double dst;
-    private final double h;
-    private final double f;
-    private JumpPoint parent;
-    
-    JumpPoint(int x, int y, double h, double dst) {
-        this.x = x;
-        this.y = y;
-        this.h = h;
-        this.dst = dst;
-        this.dx = 0;
-        this.dy = 0;
-        this.f = dst + h;
-    }
-    
-    JumpPoint(int x, int y, int dx, int dy, double h, double dst) {
-        this.x = x;
-        this.y = y;
-        this.dx = dx;
-        this.dy = dy;
-        this.h = h;
-        this.dst = dst;
-        this.f = dst + h;
-    }
-    
-    int getX() {
-        return this.x;
-    }
-    
-    int getY() {
-        return this.y;
-    }
-    
-    void setParent(JumpPoint parent) {
-        this.parent = parent;
-    }
-    
-    JumpPoint getParent() {
-        return this.parent;
-    }
-    
-    // The hash components of our algorithm wouldn't work if hashing and equals
-    // took into account anything other than the position and direction
-    @Override
-    public int hashCode() {
-        return Objects.hash(x, y, dx, dy);
-    }
-    
-    
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final JumpPoint other = (JumpPoint) obj;
-        if (this.x != other.x) {
-            return false;
-        }
-        if (this.y != other.y) {
-            return false;
-        }
-        if (this.dx != other.dx) {
-            return false;
-        }
-        if (this.dy != other.dy) {
-            return false;
-        }
-        return true;
-    }
-    
-    @Override
-    public int compareTo(JumpPoint other) {
-        // This will be used by PriorityQueue, so we want it to check just
-        // the heuristic value
-        return Double.compare(this.f, other.f);
+               && (x >= 0 && x < g.nodes[0].length);
     }
 }
