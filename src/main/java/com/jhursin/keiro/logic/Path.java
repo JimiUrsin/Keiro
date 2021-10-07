@@ -62,9 +62,6 @@ public class Path {
         HashMap<Point, Double> fScore = new HashMap<>();
         fScore.put(start, distance(start, grid.getEndX(), grid.getEndY()));
 
-        // Stores how many points we have been to
-        int operations = 0;
-
         long time = System.nanoTime();
 
         while (!open.isEmpty()) {
@@ -73,7 +70,6 @@ public class Path {
 
             // Get the Point with the highest priority
             Point curr = open.poll();
-            operations++;
 
             // If polled Point was the goal, we are done
             if (curr.x == grid.getEndX() && curr.y == grid.getEndY()) {
@@ -81,6 +77,7 @@ public class Path {
             }
 
             open.remove(curr);
+            
             if (draw) {
                 mw.setRGB(curr.x, curr.y, Node.DROPPED.getRGB());
             }
@@ -121,11 +118,9 @@ public class Path {
         Point goal = new Point(grid.getEndX(), grid.getEndY());
         
         if (cameFrom.get(goal) == null) {
-            System.out.println("Goal was not found");
-            length = 0;
-        } else {
-            System.out.println("Goal was found");
-            
+            System.out.println("A* did not find the goal");
+            return 0;
+        } else {            
             length = gScore.get(goal);
             
             if (draw) {
@@ -152,16 +147,17 @@ public class Path {
                     curr = path.pop();
                     mw.setRGB(curr.x, curr.y, Node.PATH.getRGB());
 
-                    // If dimensions exceed 400, we probably need to fill all
+                    // If dimensions exceed 500, we probably need to fill all
                     // surrounding pixels as well for visibility
-                    if (grid.nodes.length > 400 && grid.nodes[0].length > 400) {
-                        for(Point d : deltas) {                        
+                    if (Math.min(grid.nodes.length, grid.nodes[0].length) > 500) {
+                        for(Point d : deltas) {
                             mw.setRGB(curr.x + d.x, curr.y + d.y, Node.PATH.getRGB());
                         }
                     }
                 }
             }
         }
+        
         System.out.println("A* length = " + length);
 
         return length;
@@ -197,9 +193,7 @@ public class Path {
             
             if (node.x == grid.getEndX() && node.y == grid.getEndY()) {
                 break;
-            }
-            
-            if (mw != null) mw.setRGB(node.x, node.y, Node.DROPPED.getRGB());            
+            }            
             
             ArrayList<JumpPoint> found_nodes;
             
@@ -226,6 +220,7 @@ public class Path {
         
         if (goal == null) {
             // Goal wasn't found
+            System.out.println("JPS didn't find the goal");
             if (mw != null) mw.jpsHasRun = true;
             return 0;
         }
@@ -246,7 +241,7 @@ public class Path {
             
             Point curr = s.pop();
 
-            long pathDelay = 5_000_000_000L / s.size();
+            long pathDelay = 3_000_000_000L / s.size();
 
             long pathTime = System.nanoTime();
             
@@ -358,8 +353,7 @@ public class Path {
                     found_nodes.add(jp);
                 }
                 return found_nodes;
-            }
-            
+            }            
         }
     }
     
@@ -493,7 +487,7 @@ public class Path {
                 return found_nodes;
             }
             
-            if (mw != null) mw.setRGB(x1, y1, Node.QUEUE.getRGB());
+            if (mw != null) mw.setTemp(x1, y1);
             
             // This point is two steps into our given direction
             int x2 = x1 + dx;
@@ -639,9 +633,9 @@ public class Path {
      * @return Whether the Point is a valid location on the grid
      */
     static boolean valid(final Point a, final Grid g) {
-        return (g.nodes[a.y][a.x] != Node.BLOCKED)
-            && (a.x >= 0 && a.x < g.nodes[0].length)
-            && (a.y >= 0 && a.y < g.nodes.length);
+        return (a.x >= 0 && a.x < g.nodes[0].length)
+            && (a.y >= 0 && a.y < g.nodes.length)
+            && (g.nodes[a.y][a.x] != Node.BLOCKED);
     }
     
     /**
@@ -651,9 +645,9 @@ public class Path {
      * @param g The Grid the point will be checked against
      * @return Whether the Point is a valid location on the grid
      */
-    static boolean valid(final int x, final int y, final Grid g) {
-        return (g.nodes[y][x] != Node.BLOCKED)
-               && (y >= 0 && y < g.nodes.length)
-               && (x >= 0 && x < g.nodes[0].length);
+    public static boolean valid(final int x, final int y, final Grid g) {
+        return (y >= 0 && y < g.nodes.length)
+                && (x >= 0 && x < g.nodes[0].length)
+                && (g.nodes[y][x] != Node.BLOCKED);
     }
 }

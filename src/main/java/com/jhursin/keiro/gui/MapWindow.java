@@ -2,16 +2,15 @@ package com.jhursin.keiro.gui;
 
 import com.jhursin.keiro.logic.Grid;
 import com.jhursin.keiro.logic.Node;
+import com.jhursin.keiro.logic.Path;
 import java.awt.Image;
 import java.awt.Toolkit;
+import java.awt.event.MouseAdapter;
 import java.awt.image.BufferedImage;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import java.awt.event.MouseListener;
 import java.awt.event.MouseEvent;
-import java.awt.image.DataBufferByte;
-import java.awt.image.DataBufferInt;
 import java.util.ArrayList;
 
 class Point {
@@ -41,7 +40,15 @@ public class MapWindow {
     Runnable jps;
     Runnable aStar;
     ArrayList<Point> tempPixels;
-
+    
+    private void copyBufferedImage(BufferedImage to, BufferedImage from) {
+        for(int y = 0; y < from.getHeight(); y++) {
+            for(int x = 0; x < from.getWidth(); x++) {
+                to.setRGB(x, y, from.getRGB(x, y));
+            }
+        }
+    }
+    
     /**
      * Construct a window with a given image in it.
      * @param bi BufferedImage to be displayed
@@ -50,13 +57,8 @@ public class MapWindow {
     private void constructMapWindow(BufferedImage bi, Grid g) {
         this.frame = new JFrame("Keiro");
         this.bimg = bi;
-        
         this.bimg2 = new BufferedImage(bi.getWidth(), bi.getHeight(), BufferedImage.TYPE_INT_RGB);
-        for(int y = 0; y < bi.getHeight(); y++) {
-            for(int x = 0; x < bi.getWidth(); x++) {
-                this.bimg2.setRGB(x, y, bi.getRGB(x, y));
-            }
-        }
+        copyBufferedImage(bimg2, bimg);
         
         // TODO Change this when we use more than one MapWindow
         this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -66,21 +68,9 @@ public class MapWindow {
         JLabel label = new JLabel(new ImageIcon(bimg));
         
         // ImageIcons can't have listeners, so put it on the JLabel
-        label.addMouseListener(new MouseListener() {
+        label.addMouseListener(new MouseAdapter() {
             @Override
-            public void mousePressed(MouseEvent e) { }
-
-            @Override
-            public void mouseReleased(MouseEvent e) { }
-
-            @Override
-            public void mouseEntered(MouseEvent e) { }
-
-            @Override
-            public void mouseExited(MouseEvent e) { }
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mousePressed(MouseEvent e) { 
                 // Side note: I know I'm referencing the static version of
                 // startSet/endSet/hasruns here but I can't refer to the 
                 // local version via the EventListener, this is probably 
@@ -95,45 +85,44 @@ public class MapWindow {
                 // 4. Run A*
                 
                 // This is an awful mess but I just had to get this working
-                // TODO Pretty much rewrite this whole thing when JPS is actually working
+                // TODO Still not perfect but getting there
+                
+                final int clickX = e.getX();
+                final int clickY = e.getY();
                 if (!startSet) {
-                    if (e.getX() < 0 || e.getX() > g.nodes[0].length
-                     || e.getY() < 0 || e.getY() > g.nodes.length) {
-                        return;
-                    } else if (g.nodes[e.getY()][e.getX()] == Node.BLOCKED) {
+                    if (!Path.valid(clickX, clickY, g)) {
                         return;
                     }
-                    System.out.println(String.format("Setting start to (%d, %d)", e.getX(), e.getY()));
-                    g.setStart(e.getX(), e.getY());
-                    drawStart(e.getX(), e.getY());
+                    g.setStart(clickX, clickY);
+                    drawStart(clickX, clickY);
+                    
                     startSet = true;
                     Toolkit.getDefaultToolkit().beep();
                 } else if (!goalSet) {
-                    if (e.getX() < 0 || e.getX() > g.nodes[0].length
-                     || e.getY() < 0 || e.getY() > g.nodes.length) {
-                        return;
-                    } else if (g.nodes[e.getY()][e.getX()] == Node.BLOCKED) {
+                    if (!Path.valid(clickX, clickY, g)) {
                         return;
                     }
-                    drawEnd(e.getX(), e.getY());
-                    System.out.println(String.format("Setting goal to (%d, %d)", e.getX(), e.getY()));
-                    g.setEnd(e.getX(), e.getY());
+                    
+                    drawEnd(clickX, clickY);
+                    g.setEnd(clickX, clickY);
+                    
                     goalSet = true;
                     Toolkit.getDefaultToolkit().beep();
                 } else {
                     if (!jpsHasRun && !jpsRunning) {
-                        Thread t = new Thread(jps);
-                        t.start();
-                        jpsRunning = true;
-                    } else if (jpsHasRun && !aStarHasRun) {
-                        for(int y = 0; y < bi.getHeight(); y++) {
-                            for(int x = 0; x < bi.getWidth(); x++) {
-                                bimg.setRGB(x, y, bimg2.getRGB(x, y));
-                            }
+                        if (jps != null) {
+                            Thread t = new Thread(jps);
+                            t.start();
+                            jpsRunning = true;
+                        } else {
+                            jpsHasRun = true;
                         }
+                    }
+                    if (jpsHasRun && !aStarHasRun) {
+                        aStarHasRun = true;
+                        copyBufferedImage(bimg, bimg2);
                         Thread t = new Thread(aStar);
                         t.start();
-                        aStarHasRun = true;
                     }
                 }
             }
@@ -145,9 +134,10 @@ public class MapWindow {
     }
     
     private void constructMapWindow(BufferedImage bi, int newmultiplier) {
-        if (newmultiplier < 0) {
+        if (newmultiplier < 1) {
             throw new IllegalArgumentException("Multiplier can't be less than 1");
         }
+        
         this.frame = new JFrame("Keiro");
         this.multiplier = newmultiplier;
         
@@ -235,7 +225,6 @@ public class MapWindow {
         tempPixels.clear();
     }
     
-    // TODO Check out of bounds
     private void drawStart(int x, int y) {
         int d = Math.min(this.bimg.getHeight(), this.bimg.getWidth()) / 100 + 1;
         x -= d / 2;
@@ -252,7 +241,6 @@ public class MapWindow {
         }
     }
     
-    // TODO Check out of bounds
     private void drawEnd(int x, int y) {
         int d = Math.min(this.bimg.getHeight(), this.bimg.getWidth()) / 100 + 1;
         x -= d / 2;

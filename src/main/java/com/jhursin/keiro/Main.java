@@ -23,22 +23,16 @@ public class Main {
         
         // The user will see the actual colors of the map since we make the window
         // based on the read image and not the grid
-        MapWindow mw = new MapWindow(bimg, grid);        
+        MapWindow mw = new MapWindow(bimg, grid);
         
         // Run these on their own thread so picture processing can happen while
         // the algorithm is solving
-        Runnable JPS = new Runnable() {
-            @Override
-            public void run() {                
-                Path.solveJPS(grid, mw, 1000L);
-            }
+        Runnable JPS = () -> {
+            Path.solveJPS(grid, mw, 1000L);
         };
         
-        Runnable aStar = new Runnable() {
-            @Override
-            public void run() {                
-                Path.solveAStar(grid, mw, 5000L);
-            }
+        Runnable aStar = () -> {
+            Path.solveAStar(grid, mw, 5000L);
         };
         
         mw.setJPS(JPS);
