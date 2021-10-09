@@ -7,18 +7,16 @@ The GUI part houses everything related to showing the progress of the pathing to
 The pathing part has its own representation of the map that it's solving and will very frequently ask the GUI to draw its progress for the user. Pathing is run on its own thread such that the GUI can be updated while the algorithm is solving the map.
 
 ### Implemented time and space complexities
-A\* mostly works as it should, so its time and space complexities are hopefully close to what they're supposed to. It uses a priority queue such that the nodes closest to the goal via Chebyshev distance is handled first. 
+A\* mostly works as it should, so its time and space complexities are hopefully close to what they're supposed to. It uses a priority queue such that the nodes closest to the goal via Euclidean distance is handled first. 
 
-JPS -
+JPS works the same way as A\*, and has similar complexities.
 
 ### Comparative performance
-A\* works pretty fast. I know that there are many ways of speeding it up even more, but my focus has been more on getting JPS to work for the past hour or twenty. If I have time at some point I will work on improving its speed. 
-
-JPS doesn't always work, but when it does, it's pretty fast ¯\_(ツ)_/¯
+A\* works pretty fast, it can solve a very complex 1000x1000 labyrinth in a couple of seconds.
+JPS usually takes about a tenth of the time A\* takes.
 
 ### Possible flaws and improvements
-- JPS doesn't work
-- UX is terrible right now
+- UX is not very intuitive
 - Much more
 
 ### Sources

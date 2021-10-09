@@ -3,10 +3,7 @@ package com.jhursin.keiro.gui;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Toolkit;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -16,7 +13,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
- * This window will be presented to the user when they first start the program.
+ * This window will be presented to the user when they first start the program (eventually).
  *
  */
 public final class MainWindow {

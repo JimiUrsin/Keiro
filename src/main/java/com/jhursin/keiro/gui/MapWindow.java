@@ -70,7 +70,7 @@ public class MapWindow {
         // ImageIcons can't have listeners, so put it on the JLabel
         label.addMouseListener(new MouseAdapter() {
             @Override
-            public void mousePressed(MouseEvent e) { 
+            public void mousePressed(MouseEvent e) {
                 // Side note: I know I'm referencing the static version of
                 // startSet/endSet/hasruns here but I can't refer to the 
                 // local version via the EventListener, this is probably 
