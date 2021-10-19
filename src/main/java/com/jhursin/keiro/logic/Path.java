@@ -2,6 +2,7 @@ package com.jhursin.keiro.logic;
 
 import com.jhursin.keiro.gui.MapWindow;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.PriorityQueue;
 import java.util.Stack;
@@ -21,7 +22,7 @@ public class Path {
         new Point(-1, +1)
     };
     
-    private static final double DIAG_COST = Math.sqrt(2D);
+    private static final double DIAG_COST = Math.sqrt(2.0);
 
     /**
      * Solves a grid with the A* algorithm, then draws its path on the grid
@@ -41,7 +42,7 @@ public class Path {
         // Open nodes
         PriorityQueue<Point> open = new PriorityQueue<>();
 
-        // Add the starting point to the open queue with priority 0
+        // Add the starting point to the open queue
         Point start = new Point(grid.getStartX(), grid.getStartY());
         start.setPrio(distance(start, grid.getEndX(), grid.getEndY()));
         open.add(start);
@@ -161,6 +162,70 @@ public class Path {
         System.out.println("A* length = " + length);
 
         return length;
+    }
+    
+    public static void solveIDA(Grid grid, MapWindow mw, long delay) {
+        Point start = new Point(grid.getStartX(), grid.getStartY());        
+        
+        double bound = distance(start, grid.getEndX(), grid.getEndY());
+        
+        HashMap<Point, Double> distances = new HashMap<>();
+        
+        Stack<Point> path = new Stack<>();
+        path.push(start);
+        while(true) {
+            double t = search(path, 0, bound, distances, grid, mw, delay);
+            if (t == -1.0) {
+                System.out.println("The goal was found");
+                break;
+            }
+            if (t == Double.MAX_VALUE) {
+                System.out.println("The goal was not found");
+                break;
+            }
+            bound = t;
+        }
+    }
+    
+    private static double search(Stack<Point> path, double g, double bound, HashMap<Point, Double> distances, Grid grid, MapWindow mw, long delay) {
+        Point node = path.peek();
+        Double h = distances.get(node);
+        if (h == null) {
+            h = distance(node, grid.getEndX(), grid.getEndY());
+            distances.put(node, h);
+        }
+        double f = g + h;
+        if (f > bound) {
+            return f;
+        }
+        if (node.x == grid.getEndX() && node.y == grid.getEndY()) {
+            return -1.0;
+        }
+        double min = Double.MAX_VALUE;
+        
+        for(int i = 0; i < deltas.length; i++) {
+            Point d = deltas[i];
+            Point next = new Point(node.x + d.x, node.y + d.y);
+            if (path.contains(next) || !valid(next, grid)) {
+                continue;
+            }
+            double newG = g + (i >= 4 ? DIAG_COST : 1.0);
+            
+            path.push(next);
+            mw.setRGB(next.x, next.y, Node.PATH.getRGB());
+            
+            double t = search(path, newG, bound, distances, grid, mw, delay);
+            
+            path.pop();
+            mw.setRGB(next.x, next.y, Node.DROPPED.getRGB());
+            
+            if (t == -1.0) {
+                return -1.0;
+            }
+            min = Math.min(t, min);
+        }
+        
+        return min;
     }
     
     public static double solveJPS(Grid grid, MapWindow mw, long delay) {
