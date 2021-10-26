@@ -5,7 +5,7 @@ import java.util.Objects;
 /**
  * A Point class that holds an X, Y and priority component.
  */
-class Point implements Comparable<Point> {
+class Point implements Comparable {
     // CHECKSTYLE:OFF
     final int x;
     final int y;
@@ -58,7 +58,8 @@ class Point implements Comparable<Point> {
     }
 
     @Override
-    public int compareTo(final Point p) {
+    public int compareTo(final Object o) {
+        final Point p = (Point) o;
         return Double.compare(this.prio, p.prio);
     }
 }
