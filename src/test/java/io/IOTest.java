@@ -34,29 +34,29 @@ public class IOTest {
         }
         return dummy;
     }
-    
+
     BufferedImage bimg;
-    
+
     @Before
     public void setUp() {
         bimg = makeDummyImage();
     }
-    
+
     @Test
     public void testReadingFromFile() {
         BufferedImage checkers = FileToImage.readFile("resources\\test\\checkers.png");
         assertFalse("File reading was not successful", checkers.getWidth() == 1 && checkers.getHeight() == 1);
     }
-    
+
     @Test
     public void testWritingAndReadingMatchesOriginal() {
         String filename = "resources\\test\\temp_checkers.png";
         ImageToFile.drawToFile(bimg, filename);
         BufferedImage bimg2 = FileToImage.readFile(filename);
-        
+
         assertEquals("Image differs in width from original", bimg.getWidth(), bimg2.getWidth());
         assertEquals("Image differs in height from original", bimg.getHeight(), bimg2.getHeight());
-        
+
         for(int y = 0; y < bimg.getHeight(); y++) {
             for(int x = 0; x < bimg.getWidth(); x++) {
                 if (bimg.getRGB(x, y) != bimg2.getRGB(x, y)) {

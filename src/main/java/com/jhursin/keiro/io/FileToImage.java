@@ -14,8 +14,11 @@ import com.jhursin.keiro.logic.Node;
  */
 public final class FileToImage {
 
+    /**
+     * Prevent instantiation.
+     */
     private FileToImage() { }
-    
+
     /**
      * Read a file into a BufferedImage.
      * @param filename Name of file to be read
@@ -34,7 +37,7 @@ public final class FileToImage {
         if (bimg == null) {
             return new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
         }
-        
+
         return bimg;
     }
 
@@ -48,17 +51,19 @@ public final class FileToImage {
      */
     public static Grid readFileToGrid(final String filename) {
         BufferedImage bimg = readFile(filename);
-        
+
         if (bimg.getHeight() == 0 || bimg.getWidth() == 0) {
             throw new IllegalArgumentException("Neither of the map's dimensions can be zero");
         }
-        
+
         Grid grid = new Grid(bimg.getWidth(), bimg.getHeight());
-        
+
         for (int y = 0; y < bimg.getHeight(); y++) {
             for (int x = 0; x < bimg.getWidth(); x++) {
                 Node n = Node.match(bimg.getRGB(x, y));
-                if (n == Node.BLOCKED) grid.obstacles++;
+                if (n == Node.BLOCKED) {
+                    grid.obstacles++;
+                }
                 grid.nodes[y][x] = n;
             }
         }

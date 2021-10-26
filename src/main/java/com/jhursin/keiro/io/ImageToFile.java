@@ -8,10 +8,13 @@ import javax.imageio.ImageIO;
 
 /**
  * Contains methods related to drawing pixel images to file.
- * 
+ *
  */
 public final class ImageToFile {
 
+    /**
+     * Prevent instantiation.
+     */
     private ImageToFile() { }
 
     /**
@@ -33,7 +36,7 @@ public final class ImageToFile {
 
     /**
      * Takes a grid and draws it into a file using drawToFile.
-     * @see #drawToFile(java.awt.image.BufferedImage, java.lang.String) 
+     * @see #drawToFile(java.awt.image.BufferedImage, java.lang.String)
      * @param grid Grid to be drawn
      * @param filename File to be written to
      */

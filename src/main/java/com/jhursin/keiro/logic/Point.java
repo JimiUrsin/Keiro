@@ -2,34 +2,54 @@ package com.jhursin.keiro.logic;
 
 import java.util.Objects;
 
-class Point implements Comparable {
-    int x;
-    int y;
+/**
+ * A Point class that holds an X, Y and priority component.
+ */
+class Point implements Comparable<Point> {
+    // CHECKSTYLE:OFF
+    final int x;
+    final int y;
     double prio;
+    // CHECKSTYLE:ON
 
-    Point(final int x, final int y, double prio) {
+    /**
+     * Create a new Point.
+     * @param x X coordinate of this Point
+     * @param y Y coordinate of this Point
+     * @param prio Priority value of this point
+     */
+    Point(final int x, final int y, final double prio) {
         this.x = x;
         this.y = y;
         this.prio = prio;
     }
 
-    Point(final int newx, final int newy) {
-        this.x = newx;
-        this.y = newy;
+    /**
+     * Create a new Point with a priority of 0.
+     * @param x X coordinate of this Point
+     * @param y Y coordinate of this Point
+     */
+    Point(final int x, final int y) {
+        this.x = x;
+        this.y = y;
         this.prio = 0;
     }
 
-    void setPrio(double newprio) {
-        this.prio = newprio;
+    /**
+     * Set the priority for this Point.
+     * @param prio New priority of this point
+     */
+    void setPrio(final double prio) {
+        this.prio = prio;
     }
-    
+
     @Override
     public int hashCode() {
         return Objects.hash(x, y);
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(final Object other) {
         if (other == null || other.getClass() != getClass()) {
             return false;
         }
@@ -38,8 +58,7 @@ class Point implements Comparable {
     }
 
     @Override
-    public int compareTo(Object o) {
-        Point other = (Point) o;
-        return Double.compare(this.prio, other.prio);
+    public int compareTo(final Point p) {
+        return Double.compare(this.prio, p.prio);
     }
 }
