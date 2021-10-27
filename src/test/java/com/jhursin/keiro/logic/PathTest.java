@@ -1,8 +1,5 @@
-package path;
+package com.jhursin.keiro.logic;
 
-import com.jhursin.keiro.logic.Grid;
-import com.jhursin.keiro.logic.Node;
-import com.jhursin.keiro.logic.Path;
 import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;

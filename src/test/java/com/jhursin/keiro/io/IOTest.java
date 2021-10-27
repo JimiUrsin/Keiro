@@ -1,7 +1,5 @@
-package io;
+package com.jhursin.keiro.io;
 
-import com.jhursin.keiro.io.FileToImage;
-import com.jhursin.keiro.io.ImageToFile;
 import java.awt.image.BufferedImage;
 import java.io.File;
 

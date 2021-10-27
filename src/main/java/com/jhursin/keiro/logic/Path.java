@@ -318,7 +318,7 @@ public final class Path {
      * @param mw MapWindow onto which our progress will be drawn
      * @return All nodes that were found during this search
      */
-    private static ArrayList<JumpPoint> searchH(final PriorityQueue<JumpPoint> nodes, final HashMap<JumpPoint, JumpPoint> closed, final Point p, final int dx, final double dst, final Grid g, final MapWindow mw) {
+    static ArrayList<JumpPoint> searchH(final PriorityQueue<JumpPoint> nodes, final HashMap<JumpPoint, JumpPoint> closed, final Point p, final int dx, final double dst, final Grid g, final MapWindow mw) {
         int x0 = p.x;
         int y = p.y;
 
@@ -419,7 +419,7 @@ public final class Path {
      * @param mw MapWindow onto which our progress will be drawn
      * @return All nodes that were found during this search
      */
-    private static ArrayList<JumpPoint> searchV(final PriorityQueue<JumpPoint> nodes, final HashMap<JumpPoint, JumpPoint> closed, final Point p, final int dy, final double dst, final Grid g, final MapWindow mw) {
+    static ArrayList<JumpPoint> searchV(final PriorityQueue<JumpPoint> nodes, final HashMap<JumpPoint, JumpPoint> closed, final Point p, final int dy, final double dst, final Grid g, final MapWindow mw) {
         // This is literally the exact same method as search_h, except vertically
         // please refer to its documentation
         // This is done for speed and readability
@@ -507,7 +507,7 @@ public final class Path {
      * @param delay The minimum time between each operation in nanoseconds
      * @return All nodes that were found during this search
      */
-    private static ArrayList<JumpPoint> searchD(final PriorityQueue<JumpPoint> nodes, final HashMap<JumpPoint, JumpPoint> closed, final Point p, final int dx, final int dy, final double dst, final Grid g, final MapWindow mw, final long delay) {
+    static ArrayList<JumpPoint> searchD(final PriorityQueue<JumpPoint> nodes, final HashMap<JumpPoint, JumpPoint> closed, final Point p, final int dx, final int dy, final double dst, final Grid g, final MapWindow mw, final long delay) {
         int x0 = p.x;
         int y0 = p.y;
 
