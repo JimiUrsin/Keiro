@@ -1,6 +1,10 @@
 package com.jhursin.keiro.logic;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.PriorityQueue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -68,5 +72,43 @@ public class PathTest {
         double length = Path.solveJPS(g, null, 0);
 
         assertEquals("Path was not shortest possible", 16 + Math.sqrt(2), length, 0.1);
+    }
+    
+    @Test
+    public void testVerticalSearchFindsAllJumpPoints() {
+        addObstacles(g);
+        
+        // A forced neighbor moving down and right should be found
+        // and it should also add itself back as a JumpPoint
+        JumpPoint downRight = new JumpPoint(0, 8, 1, 1, 0, 0);
+        JumpPoint down = new JumpPoint(0, 8, 0, 1, 0, 0);
+        
+        final PriorityQueue<JumpPoint> nodes = new PriorityQueue<>();
+        final HashMap<JumpPoint, JumpPoint> closed = new HashMap<>();
+        final Point p = new Point(0, 0);
+        
+        ArrayList<JumpPoint> foundNodes = Path.searchV(nodes, closed, p, 1, 0, g, null);
+        assertEquals("An incorrect amount of JumpPoints were found during vertical search", 2, foundNodes.size());
+        assertTrue("A JumpPoint moving down and right was not present in foundNodes", foundNodes.contains(downRight));        
+        assertTrue("Vertical search did not correctly add itself to foundNodes", foundNodes.contains(down));
+    }
+    
+    @Test
+    public void testHorizontalSearchFindsAllJumpPoints() {
+        addObstacles(g);
+        
+        // A forced neighbor moving down and right should be found
+        // and it should also add itself back as a JumpPoint
+        JumpPoint downRight = new JumpPoint(8, 0, 1, 1, 0, 0);
+        JumpPoint down = new JumpPoint(8, 0, 1, 0, 0, 0);
+        
+        final PriorityQueue<JumpPoint> nodes = new PriorityQueue<>();
+        final HashMap<JumpPoint, JumpPoint> closed = new HashMap<>();
+        final Point p = new Point(0, 0);
+        
+        ArrayList<JumpPoint> foundNodes = Path.searchH(nodes, closed, p, 1, 0, g, null);
+        assertEquals("An incorrect amount of JumpPoints were found during horizontal search", 2, foundNodes.size());
+        assertTrue("A JumpPoint moving down and right was not present in foundNodes", foundNodes.contains(downRight));        
+        assertTrue("Horizontal search did not correctly add itself to foundNodes", foundNodes.contains(down));
     }
 }

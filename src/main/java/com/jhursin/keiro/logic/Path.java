@@ -420,7 +420,7 @@ public final class Path {
      * @return All nodes that were found during this search
      */
     static ArrayList<JumpPoint> searchV(final PriorityQueue<JumpPoint> nodes, final HashMap<JumpPoint, JumpPoint> closed, final Point p, final int dy, final double dst, final Grid g, final MapWindow mw) {
-        // This is literally the exact same method as search_h, except vertically
+        // This is literally the exact same method as searchH, except vertically
         // please refer to its documentation
         // This is done for speed and readability
 
