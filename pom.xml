@@ -57,8 +57,10 @@
 					<excludes>
 						<exclude>com/jhursin/keiro/logic/PerformanceTest.java</exclude>
 					</excludes>
+					<useFile>false</useFile>
 				</configuration>
 			</plugin>
+			
 		</plugins>
 	</build>
 	<reporting>
