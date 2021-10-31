@@ -1,7 +1,7 @@
 ### How to use the application
 - Download some maps you want to try out (as a PNG) from the [Moving AI Lab](https://www.movingai.com/benchmarks/grids.html)
 - Make sure you have Java 16
-- Run the jar from the latest release
+- Run the jar from the [latest release](https://github.com/JimiUrsin/Keiro/releases/latest)
 - It will prompt you for a PNG file, select one of the maps you downloaded
 - Click once to set your starting point on some open spot, you should hear a sound
 - Click again to set your goal
