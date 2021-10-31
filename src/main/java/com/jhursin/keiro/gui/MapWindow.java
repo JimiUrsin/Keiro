@@ -13,7 +13,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import javax.swing.BoxLayout;
 
 //CHECKSTYLE:OFF
 class Point {
@@ -159,7 +158,7 @@ public class MapWindow {
                     }
                 }
             }
-            
+
             @Override
             public void mouseMoved(final MouseEvent e) {
                 int mouseX = e.getX();
@@ -167,7 +166,7 @@ public class MapWindow {
                 mousePos.setText(mouseX + ", " + mouseY);
             }
         };
-        
+
         label.addMouseListener(listener);
         label.addMouseMotionListener(listener);
 

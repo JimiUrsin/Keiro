@@ -19,3 +19,6 @@ Performance tests are run separately with
 mvn test -Dtest=PerformanceTest
 ```
 Performance testing will run all maps under resources/benchmark/
+
+### Coverage
+![Coverage](coverage.png)

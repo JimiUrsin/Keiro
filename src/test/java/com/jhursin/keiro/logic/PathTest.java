@@ -2,7 +2,6 @@ package com.jhursin.keiro.logic;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.PriorityQueue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

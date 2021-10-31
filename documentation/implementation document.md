@@ -15,7 +15,7 @@ As for space complexity, both the algorithms keep all nodes in memory, and thus 
 
 ### Comparative performance
 A\* works pretty fast, it can solve a very complex 1000x1000 labyrinth in a couple of seconds.
-Based on empirical testing in the performance tests outlined in the testing document, JPS has never been slower than A\*. At worst, JPS is still at least a couple times faster and at best more than a hundred times faster. As we can see from graph 1, JPS becomes faster and faster than A\* for bigger inputs.
+Based on empirical testing in the performance tests outlined in the testing document, JPS has never been slower than A\*. At worst, JPS is still at least a couple times faster and at best more than a hundred times faster. As we can see from graph 1 (first graph below), JPS becomes faster and faster than A\* for bigger inputs.
 ![Graph 1](graph1.png)
 ![Graph 2](graph2.png)
 ![Graph 3](graph3.png)
