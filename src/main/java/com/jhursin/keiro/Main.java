@@ -20,9 +20,12 @@ public final class Main {
 
     /**
      * Set up the GUI and displays it to the user.
-     * @param args Command line arguments, these are ignored
+     * @param args Command line arguments, these are ignored right now
      */
     public static void main(final String[] args) {
+
+        final long jpsDelay = 2000L;
+        final long aStarDelay = 5000L;
 
         // Get a file from the user.
         // The filename will be the absolute (i.e. not relative) path
@@ -46,11 +49,11 @@ public final class Main {
         // Run these on their own thread so picture processing can happen while
         // the algorithm is solving
         Runnable jps = () -> {
-            Path.solveJPS(grid, mw, 1000L);
+            Path.solveJPS(grid, mw, jpsDelay);
         };
 
         Runnable aStar = () -> {
-            Path.solveAStar(grid, mw, 5000L);
+            Path.solveAStar(grid, mw, aStarDelay);
         };
 
         mw.setJPS(jps);

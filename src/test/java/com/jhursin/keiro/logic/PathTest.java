@@ -13,9 +13,9 @@ public class PathTest {
     /**
      * Make and grid full of empty nodes with a start node in the upper left corner
      * and an end node in the bottom right
-     * @param width
-     * @param height
-     * @return
+     * @param width Width of grid to be created
+     * @param height Height of grid to be greated
+     * @return The empty grid that was created
      */
     private Grid makeEmptyGrid(int width, int height) {
         Grid g = new Grid(width, height);
@@ -110,5 +110,24 @@ public class PathTest {
         assertEquals("An incorrect amount of JumpPoints were found during horizontal search", 2, foundNodes.size());
         assertTrue("A JumpPoint moving down and right was not present in foundNodes", foundNodes.contains(downRight));
         assertTrue("Horizontal search did not correctly add itself to foundNodes", foundNodes.contains(down));
+    }
+    
+    @Test
+    public void testDiagonalSearchFindsAllJumpPoints() {
+        g.nodes[7][1] = Node.BLOCKED;
+        g.nodes[8][2] = Node.BLOCKED;
+        
+        final PriorityQueue<JumpPoint> nodes = new PriorityQueue<>();
+        final HashMap<JumpPoint, JumpPoint> closed = new HashMap<>();        
+        final Point p = new Point(0, 9);
+        
+        JumpPoint upLeft = new JumpPoint(2, 7, -1, -1, 0, 0);        
+        JumpPoint downRight = new JumpPoint(2, 7, 1, 1, 0, 0);
+        
+        ArrayList<JumpPoint> foundNodes = Path.searchD(nodes, closed, p, 1, -1, 0, g, null, 0L);        
+        
+        assertEquals("An incorrect amount of JumpPoints were found during diagonal search", 2, foundNodes.size());
+        assertTrue("Diagonal search didn't find forced neighbor moving up and left", foundNodes.contains(upLeft));
+        assertTrue("Diagonal search didn't find forced neighbor moving down and right", foundNodes.contains(downRight));
     }
 }

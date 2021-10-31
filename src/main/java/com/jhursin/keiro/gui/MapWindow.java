@@ -3,6 +3,7 @@ package com.jhursin.keiro.gui;
 import com.jhursin.keiro.logic.Grid;
 import com.jhursin.keiro.logic.Node;
 import com.jhursin.keiro.logic.Path;
+import java.awt.BorderLayout;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
@@ -12,6 +13,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import javax.swing.BoxLayout;
 
 //CHECKSTYLE:OFF
 class Point {
@@ -94,11 +96,12 @@ public class MapWindow {
         this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.frame.setResizable(false);
         this.frame.setVisible(false);
+        this.frame.setLayout(new BorderLayout());
 
         JLabel label = new JLabel(new ImageIcon(bimg));
+        JLabel mousePos = new JLabel("0, 0");
 
-        // ImageIcons can't have listeners, so put it on the JLabel
-        label.addMouseListener(new MouseAdapter() {
+        final MouseAdapter listener = new MouseAdapter() {
             @Override
             public void mousePressed(final MouseEvent e) {
                 // Side note: I know I'm referencing the static version of
@@ -156,9 +159,20 @@ public class MapWindow {
                     }
                 }
             }
-        });
+            
+            @Override
+            public void mouseMoved(final MouseEvent e) {
+                int mouseX = e.getX();
+                int mouseY = e.getY();
+                mousePos.setText(mouseX + ", " + mouseY);
+            }
+        };
+        
+        label.addMouseListener(listener);
+        label.addMouseMotionListener(listener);
 
-        this.frame.getContentPane().add(label);
+        this.frame.getContentPane().add(label, BorderLayout.NORTH);
+        this.frame.getContentPane().add(mousePos, BorderLayout.SOUTH);
 
         this.frame.pack();
     }
