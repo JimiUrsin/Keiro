@@ -3,6 +3,8 @@ IO testing is focused around reading and writing being consistent. In the case o
 
 A\* and JPS are tested to see if they return one of the best possible paths. The grid tested is 10x10 either with obstacles or without. JPS's horizontal, vertical and diagonal searches are tested to see if they return all JumpPoints they're supposed to. 
 
+The JumpPoints and Points used by JPS and A\* are tested to see if comparison between them works as it should. This guarantees that the algorithm proceeds as planned during operation, given that the built in PriorityQueue works as it should.
+
 My performance testing used all PNG files from the moving AI labs (except terrain maps). Unit testing doesn't need any input.
 
 

@@ -2,6 +2,7 @@ package com.jhursin.keiro.logic;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.PriorityQueue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -129,5 +130,47 @@ public class PathTest {
         assertEquals("An incorrect amount of JumpPoints were found during diagonal search", 2, foundNodes.size());
         assertTrue("Diagonal search didn't find forced neighbor moving up and left", foundNodes.contains(upLeft));
         assertTrue("Diagonal search didn't find forced neighbor moving down and right", foundNodes.contains(downRight));
+    }
+    
+    @Test
+    public void testDistanceFromPoint() {
+        Point p = new Point(0, 0);
+        double distance = Path.distance(p, 10, 10);
+        assertEquals("Distance method returned wrong distance", Math.sqrt(2) * 10, distance, 0.1);
+    }
+    
+    @Test
+    public void testDistanceFromCoordinates() {
+        double distance = Path.distance(0, 0, 10, 10);
+        assertEquals("Distance method returned wrong distance", Math.sqrt(2) * 10, distance, 0.1);
+    }
+    
+    @Test
+    public void testJumpPointComparison() {
+        JumpPoint jp1 = new JumpPoint(9, 0, 1, 2, 5, 0);
+        JumpPoint jp2 = new JumpPoint(5, 6, 7, 8, 10, 0);
+        JumpPoint jp3 = new JumpPoint(1, 2, 3, 4, 0, 15);
+        JumpPoint jp4 = new JumpPoint(3, 4, 5, 6, 0, 20);
+        JumpPoint jp5 = new JumpPoint(7, 8, 9, 0, 15, 10);
+        
+        assertTrue("JumpPoint ordering was incorrect", jp1.compareTo(jp2) < 0);
+        assertTrue("JumpPoint ordering was incorrect", jp2.compareTo(jp3) < 0);
+        assertTrue("JumpPoint ordering was incorrect", jp3.compareTo(jp4) < 0);
+        assertTrue("JumpPoint ordering was incorrect", jp4.compareTo(jp5) < 0);
+    }
+    
+    @Test
+    public void testJumpPointEqualityUsesRightValues() {
+        JumpPoint jp1 = new JumpPoint(1, 2, 3, 4, 987654321, 10101010);
+        JumpPoint jp2 = new JumpPoint(1, 2, 3, 4, 123456789, 12903901);
+        assertEquals("JumpPoints were incorrectly regarded as different", jp1, jp2);
+    }
+    
+    @Test
+    public void testPointComparison() {
+        Point p1 = new Point(0, 0, 123);
+        Point p2 = new Point(10, 10, 456);
+        
+        assertTrue("Point ordering was incorrect", p1.compareTo(p2) < 0);
     }
 }
